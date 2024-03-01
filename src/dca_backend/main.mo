@@ -62,7 +62,7 @@ actor DCA {
     };
 
     // // Method to create a new position
-    public shared ({ caller }) func createPosition(newPosition : Position) : async PositionId {
+    public shared ({ caller }) func openPosition(newPosition : Position) : async PositionId {
         let currentPositions = switch (Map.get<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, caller)) {
             case (null) {
                 // Create new Buffer if it does not exist
@@ -92,7 +92,7 @@ actor DCA {
         };
     };
 
-    public query func getPositionByIndex(principal : Principal, index : Nat) : async Result<Position, Text> {
+    public query func getPosition(principal : Principal, index : Nat) : async Result<Position, Text> {
         switch (Map.get<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, principal)) {
             case (null) { return #err("Positions do not exist for this user") };
             case (?positions) {
@@ -108,7 +108,7 @@ actor DCA {
         };
     };
 
-    public func deletePositionByIndex(principal : Principal, index : Nat) : async Result<Text, Text> {
+    public func closePosition(principal : Principal, index : Nat) : async Result<Text, Text> {
         switch (Map.get<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, principal)) {
             case (null) { return #err("Positions do not exist for this user") };
             case (?positions) {
