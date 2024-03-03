@@ -11,7 +11,13 @@ module {
         amountToSell : Nat;
         tokenToBuy : Principal;
         tokenToSell : Principal;
-        frequency : Text;
+        frequency : Frequency;
+    };
+
+    public type Frequency = {
+        #Daily;
+        #Weekly;
+        #Mothly;
     };
 
     public type PositionId = Nat;
