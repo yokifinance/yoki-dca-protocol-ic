@@ -17,7 +17,14 @@ module {
         amountOutMinimum : Text;
     };
 
-    public type Result = { #ok : Nat64; #err : Text };
+    public type Result = { #ok : Nat64; #err : CustomError };
+
+    public type CustomError = {
+        #CommonError;
+        #InternalError : Text;
+        #UnsupportedToken : Text;
+        #InsufficientFunds;
+    };
 
     public type Result_7 = {
         #Ok : { balance0 : Nat; balance1 : Nat };
