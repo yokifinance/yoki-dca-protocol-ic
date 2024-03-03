@@ -16,6 +16,8 @@ import Time "mo:base/Time";
 import Int "mo:base/Int";
 import Blob "mo:base/Blob";
 import Nat8 "mo:base/Nat8";
+import Array "mo:base/Array";
+import Error "mo:base/Error";
 import L "./Ledger";
 import S "./Sonic";
 import I "./ICSwap";
@@ -28,7 +30,6 @@ actor DCA {
 
     // Create HashMap to store a positions
     let positionsLedger = Map.new<Principal, Buffer.Buffer<Position>>();
-
 
     // Create ICP Ledger actor
     let Ledger = actor ("ryjl3-tyaaa-aaaaa-aaaba-cai") : actor {
@@ -128,18 +129,72 @@ actor DCA {
 
     };
 
-    // only for Development
-    public shared func withdraw(amount : Nat, address : Principal) : async Result<Nat, L.TransferError> {
-        await _sendIcp(address, amount);
+    public func executePurchase(index : Nat) : async Result<Nat, L.TransferFromError> {
+        let icp_reciept = await Ledger.icrc2_transfer_from({
+            amount = 30000;
+            from = {
+                owner = Principal.fromText("hfugy-ahqdz-5sbki-vky4l-xceci-3se5z-2cb7k-jxjuq-qidax-gd53f-nqe");
+                subaccount = null;
+            };
+            to = { owner = Principal.fromActor(DCA); subaccount = null };
+            spender_subaccount = null;
+            memo = null;
+            fee = ?10_000; // default ICP fee
+            created_at_time = ?Nat64.fromNat(Int.abs(Time.now()));
+        });
+
+        switch icp_reciept {
+            case (#Err(error)) {
+                return #err(error);
+            };
+            case (#Ok(value)) {
+                return #ok(value);
+            };
+        };
     };
 
-    private func _sendIcp(address : Principal, amount : Nat) : async Result<Nat, L.TransferError> {
+    private func _principalToBlob(p : Principal) : async Blob {
+        var arr : [Nat8] = Blob.toArray(Principal.toBlob(p));
+        var defaultArr : [var Nat8] = Array.init<Nat8>(32, 0);
+        defaultArr[0] := Nat8.fromNat(arr.size());
+        var ind : Nat = 0;
+        while (ind < arr.size() and ind < 32) {
+            defaultArr[ind + 1] := arr[ind];
+            ind := ind + 1;
+        };
+        return Blob.fromArray(Array.freeze(defaultArr));
+    };
+
+    public shared func depositToDex(tokenIn : Text, amount : Nat) : async Result<Nat, L.TransferError> {
+        let to = Principal.fromActor(ICPBTCpool);
+        let dcaAccountBlob = ?Account.principalToSubaccount(Principal.fromActor(DCA));
+        let sendIcpToDexResult = await _sendIcp(to, amount, dcaAccountBlob);
+        return sendIcpToDexResult;
+    };
+
+    public shared func applyDepositToDex(tokenIn : Text, amount : Nat) : async I.Result {
+        let depositConfig = {
+            token = tokenIn;
+            amount = amount;
+            fee = 10_000;
+        };
+        let applyDepositResult = await ICPBTCpool.deposit(depositConfig);
+        return applyDepositResult;
+    };
+
+    // only for Development
+    public shared({caller}) func withdraw(amount : Nat, address : Principal) : async Result<Nat, L.TransferError> {
+        assert caller == Principal.fromText("hfugy-ahqdz-5sbki-vky4l-xceci-3se5z-2cb7k-jxjuq-qidax-gd53f-nqe");
+        await _sendIcp(address, amount, null);
+    };
+
+    private func _sendIcp(address : Principal, amount : Nat, subaccount : ?Blob) : async Result<Nat, L.TransferError> {
         Debug.print("Sending ICP to:" # Principal.toText(address));
 
         // Transfer from this Canister to an address
         let icp_reciept = await Ledger.icrc1_transfer({
             amount = amount;
-            to = { owner = address; subaccount = null };
+            to = { owner = address; subaccount = subaccount };
             from_subaccount = null;
             memo = null;
             fee = ?10_000; // default ICP fee
