@@ -17,7 +17,7 @@ module {
     public type Frequency = {
         #Daily;
         #Weekly;
-        #Mothly;
+        #Monthly;
     };
 
     public type PositionId = Nat;

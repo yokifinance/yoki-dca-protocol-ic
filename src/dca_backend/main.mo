@@ -22,7 +22,7 @@ import L "./Ledger";
 import S "./Sonic";
 import I "./ICSwap";
 
-actor DCA {
+actor class DCA() = self {
     // DCA Types
     type Result<A, B> = Result.Result<A, B>;
     type PositionId = Types.PositionId;
@@ -136,7 +136,7 @@ actor DCA {
                 owner = Principal.fromText("hfugy-ahqdz-5sbki-vky4l-xceci-3se5z-2cb7k-jxjuq-qidax-gd53f-nqe");
                 subaccount = null;
             };
-            to = { owner = Principal.fromActor(DCA); subaccount = null };
+            to = { owner = Principal.fromActor(self); subaccount = null };
             spender_subaccount = null;
             memo = null;
             fee = ?10_000; // default ICP fee
@@ -167,7 +167,7 @@ actor DCA {
 
     public shared func depositToDex(tokenIn : Text, amount : Nat) : async Result<Nat, L.TransferError> {
         let to = Principal.fromActor(ICPBTCpool);
-        let dcaAccountBlob = ?Account.principalToSubaccount(Principal.fromActor(DCA));
+        let dcaAccountBlob = ?Account.principalToSubaccount(Principal.fromActor(self));
         let sendIcpToDexResult = await _sendIcp(to, amount, dcaAccountBlob);
         return sendIcpToDexResult;
     };
@@ -183,7 +183,7 @@ actor DCA {
     };
 
     // only for Development
-    public shared({caller}) func withdraw(amount : Nat, address : Principal) : async Result<Nat, L.TransferError> {
+    public shared ({ caller }) func withdraw(amount : Nat, address : Principal) : async Result<Nat, L.TransferError> {
         assert caller == Principal.fromText("hfugy-ahqdz-5sbki-vky4l-xceci-3se5z-2cb7k-jxjuq-qidax-gd53f-nqe");
         await _sendIcp(address, amount, null);
     };
