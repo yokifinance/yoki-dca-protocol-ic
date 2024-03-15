@@ -27,5 +27,20 @@ dist/
 .mops
 
 
-# Python stuff
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
 env
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
