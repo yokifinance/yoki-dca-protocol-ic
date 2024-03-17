@@ -3,6 +3,26 @@
         "dca_backend": {
             "main": "src/dca_backend/main.mo",
             "type": "motoko"
+        },
+        "icp_ledger_canister": {
+            "type": "custom",
+            "candid": "https://raw.githubusercontent.com/dfinity/ic/fff20526e154f8b8d24373efd9b50f588d147e91/rs/rosetta-api/icp_ledger/ledger.did",
+            "wasm": "https://download.dfinity.systems/ic/fff20526e154f8b8d24373efd9b50f588d147e91/canisters/ledger-canister.wasm.gz",
+            "remote": {
+                "id": {
+                    "ic": "ryjl3-tyaaa-aaaaa-aaaba-cai"
+                }
+            }
+        },
+        "ckBTC_ledger_canister": {
+            "type": "custom",
+            "candid": "https://raw.githubusercontent.com/dfinity/ic/fff20526e154f8b8d24373efd9b50f588d147e91/rs/rosetta-api/icrc1/ledger/ledger.did",
+            "wasm": "https://download.dfinity.systems/ic/fff20526e154f8b8d24373efd9b50f588d147e91/canisters/ic-icrc1-ledger.wasm.gz",
+            "remote": {
+                "id": {
+                    "ic": "mxzaz-hqaaa-aaaar-qaada-cai"
+                }
+            }
         }
     },
     "defaults": {
