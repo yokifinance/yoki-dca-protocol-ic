@@ -2,7 +2,7 @@
 
 ## Description
 
-With this projcet you can create an executable DCA financial strategy
+With this project you can create an executable DCA financial strategy
 
 ### Local development
 
