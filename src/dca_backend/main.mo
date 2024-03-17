@@ -40,6 +40,14 @@ actor class DCA() = self {
         icrc1_balance_of : shared query L.Account -> async Nat;
     };
 
+    // Create ICP Ledger actor
+    let ckBtcLedger = actor ("mxzaz-hqaaa-aaaar-qaada-cai") : actor {
+        icrc1_transfer : shared L.TransferArg -> async L.Result<>;
+        icrc2_approve : shared L.ApproveArgs -> async L.Result_1<>;
+        icrc2_transfer_from : shared L.TransferFromArgs -> async L.Result_2<>;
+        icrc1_balance_of : shared query L.Account -> async Nat;
+    };
+
     // Create Sonic DEX actor actor
     let sonicCanister = actor ("3xwpq-ziaaa-aaaah-qcn4a-cai") : actor {
         getPair : shared query (Principal, Principal) -> async ?S.PairInfoExt;
@@ -62,7 +70,7 @@ actor class DCA() = self {
         swap : shared (I.SwapArgs) -> async I.Result;
         getUserUnusedBalance : shared query (Principal) -> async I.Result_7;
         withdraw : shared (I.WithdrawArgs) -> async I.Result;
-        applyDepositToDex: shared (I.DepositArgs) -> async I.Result
+        applyDepositToDex : shared (I.DepositArgs) -> async I.Result
 
     };
 
@@ -133,14 +141,49 @@ actor class DCA() = self {
 
     };
 
-    public func executePurchase(amount: Nat, deadline: Int) : async S.TxReceipt {
-        let swap_result = await sonicCanister.swapExactTokensForTokens(
-            amount,
-            0,
-            ["ryjl3-tyaaa-aaaaa-aaaba-cai", "mxzaz-hqaaa-aaaar-qaada-cai"],
-            Principal.fromActor(self),
-            deadline,
-        );
+    public func executePurchase(principal : Principal, index : Nat) : async Result<Text, Text> {
+        switch (Map.get<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, principal)) {
+            case (null) { return #err("Positions do not exist for this user") };
+            case (?positions) {
+                // use getOpt for safe getting position by index
+                let position = positions.getOpt(index);
+                switch (position) {
+                    case (null) {
+                        return #err("Position does not exist for this index");
+                    };
+                    case (?position) {
+                        ignore await Ledger.icrc2_transfer_from({
+                            to = {
+                                owner = Principal.fromActor(self);
+                                subaccount = null;
+                            };
+                            fee = ?10_000;
+                            spender_subaccount = null;
+                            from = {
+                                owner = position.beneficiary;
+                                subaccount = null;
+                            };
+                            memo = null;
+                            created_at_time = null;
+                            amount = position.amountToSell;
+                        });
+                        ignore await ckBtcLedger.icrc1_transfer({
+                            to = {
+                                owner = position.beneficiary;
+                                subaccount = null;
+                            };
+                            fee = ?10_000;
+                            memo = null;
+                            from_subaccount = null;
+                            created_at_time = null;
+                            amount = position.amountToSell + 10_000;
+                        });
+                        return #ok("Position successfully executed !")
+                    };
+
+                };
+            };
+        };
     };
 
     private func _principalToBlob(p : Principal) : Blob {
@@ -176,8 +219,12 @@ actor class DCA() = self {
         return sonicBalance;
     };
 
-    public shared func applyDepositToDex(amount: Nat, token: Text) : async I.Result {
-        let applyDepositResult = await ICPBTCpool.deposit({amount = amount; fee = 10_000; token = token});
+    public shared func applyDepositToDex(amount : Nat, token : Text) : async I.Result {
+        let applyDepositResult = await ICPBTCpool.deposit({
+            amount = amount;
+            fee = 10_000;
+            token = token;
+        });
         return applyDepositResult;
     };
 
