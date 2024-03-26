@@ -4,15 +4,6 @@ import ic
 from ic.candid import Types
 
 
-# public type Position = {
-#     beneficiary : Principal;
-#     amountToSell : Nat;
-#     tokenToBuy : Principal;
-#     tokenToSell : Principal;
-#     frequency : Frequency;
-# };
-
-
 @pytest.fixture(name="pocket_ic_instance")
 def pocket_ic():
     pic = PocketIC()
@@ -26,11 +17,15 @@ def pocket_ic():
 
 @pytest.fixture(name="data")
 def test_data():
-    default_principal = ic.Principal.from_str(
-        "hfugy-ahqdz-5sbki-vky4l-xceci-3se5z-2cb7k-jxjuq-qidax-gd53f-nqe"
-    )
-    icp_principal_id = ic.Principal.from_str("ryjl3-tyaaa-aaaaa-aaaba-cai")
-    ckBtc_principal_id = ic.Principal.from_str("mxzaz-hqaaa-aaaar-qaada-cai")
+
+    icp_ledger_id = ic.Principal.from_str("ryjl3-tyaaa-aaaaa-aaaba-cai")
+    ckbtc_ledger_id = ic.Principal.from_str("mxzaz-hqaaa-aaaar-qaada-cai")
+
+    dca_backend_admin = ic.Principal.from_str("hfugy-ahqdz-5sbki-vky4l-xceci-3se5z-2cb7k-jxjuq-qidax-gd53f-nqe")
+    user_a = ic.Principal(b"USER_A_PRINCIPAL")
+    user_b = ic.Principal(b"USER_B_PRINCIPAL")
+
+    # public type Position from src/dca_backend/types.mo
     position_type = Types.Record(
         {
             "beneficiary": Types.Principal,
@@ -47,48 +42,131 @@ def test_data():
         }
     )
     position_vals = {
-        "beneficiary": default_principal.to_str(),
+        "beneficiary": user_a.to_str(),
         "amountToSell": 1,
-        "tokenToBuy": ckBtc_principal_id.to_str(),
-        "tokenToSell": icp_principal_id.to_str(),
+        "tokenToBuy": icp_ledger_id.to_str(),
+        "tokenToSell": ckbtc_ledger_id.to_str(),
+        "frequency": {"Daily": None},
+    }
+    position_vals_raw = {
+        "beneficiary": user_a,
+        "amountToSell": 1,
+        "tokenToBuy": icp_ledger_id,
+        "tokenToSell": ckbtc_ledger_id,
         "frequency": {"Daily": None},
     }
     return {
         "position_type": position_type,
         "position_vals": position_vals,
-        "default_principal": default_principal,
+        "position_vals_raw": position_vals_raw,
+        "user_a": user_a,
+        "user_b": user_b,
+        "dca_backend_admin": dca_backend_admin,
     }
 
 
-def test_open_position(data, pocket_ic_instance):
+def test_open_position_positive(data: dict, pocket_ic_instance: dict):
 
     pic = pocket_ic_instance["pic"]
     canister_id = pocket_ic_instance["canister_id"]
     position_type = data["position_type"]
     position_vals = data["position_vals"]
+
+    position_vals['beneficiary'] = data['user_a'].to_str()
     payload = [{"type": position_type, "value": position_vals}]
+
+    pic.set_sender(data['user_a'])
     result = pic.update_call(canister_id, "openPosition", ic.encode(params=payload))
-    assert ic.decode(result, retTypes=[Types.Nat]) == 0
+    assert ic.decode(result)[0]['value'] == 0
 
 
-def test_get_position_negative(data, pocket_ic_instance):
+def test_get_position_positive(data, pocket_ic_instance):
 
     pic = pocket_ic_instance["pic"]
     canister_id = pocket_ic_instance["canister_id"]
-    position_types = data["position_type"]
-    position_index = [
-        {"type": Types.Principal, "value": data["default_principal"].to_str()},
-        {"type": Types.Nat, "value": 0},
+    position_type = data["position_type"]
+    position_vals = data["position_vals"]
+
+    # Creating new Position
+    create_position_payload = [{"type": position_type, "value": position_vals}]
+    pic.set_sender(data['user_a'])
+    open_position_result = pic.update_call(canister_id, "openPosition", ic.encode(params=create_position_payload))
+    position_index: int = ic.decode(open_position_result)[0]['value']
+
+    # Build getPosition call payload
+    get_position_payload = [
+        {"type": Types.Principal, "value": data['user_a'].to_str()},
+        {"type": Types.Nat, "value": position_index},
     ]
-    # result = pic.query_call(canister_id, "getPosition", ic.encode(position_index))
-    # assert ic.decode(result) == [
-    #     {"type": "rec_2", "value": {"_5048165": "Positions do not exist for this user"}}
-    # ]
-    result = pic.query_raw(
-        canister_id=canister_id,
-        name="getPosition",
-        arguments=position_index,
-        return_types=[Types.Nat],
-        _effective_canister_id=None
-    )
-    assert result == 0
+
+    # Build expected result type for getPosition method 'async Result<Position, Text>'
+    get_position_method_result_type = Types.Variant({"ok": position_type, "err": Types.Text})
+    result = pic.query_call(canister_id, "getPosition", ic.encode(params=get_position_payload))
+    unpacked_result = ic.decode(result, retTypes=get_position_method_result_type)[0]['value']['ok']
+
+    assert unpacked_result['beneficiary'].to_str() == position_vals['beneficiary'], "beneficiary mismatch"
+    assert unpacked_result['amountToSell'] == position_vals['amountToSell'], "amountToSell mismatch"
+    assert unpacked_result['tokenToBuy'].to_str() == position_vals['tokenToBuy'], "tokenToBuy mismatch"
+    assert unpacked_result['tokenToSell'].to_str() == position_vals['tokenToSell'], "tokenToSell mismatch"
+
+    # Check frequency Variant
+    if 'Daily' in unpacked_result['frequency']:
+        assert 'Daily' in position_vals['frequency'], "Frequency is not Daily"
+    elif 'Weekly' in unpacked_result['frequency']:
+        assert 'Weekly' in position_vals['frequency'], "Frequency is not Weekly"
+    elif 'Monthly' in unpacked_result['frequency']:
+        assert 'Monthly' in position_vals['frequency'], "Frequency is not Monthly"
+    else:
+        raise ValueError("Unknown frequency")
+
+
+def test_get_position_negative_wrong_index(data, pocket_ic_instance):
+
+    pic = pocket_ic_instance["pic"]
+    canister_id = pocket_ic_instance["canister_id"]
+    position_type = data["position_type"]
+    position_vals = data["position_vals"]
+
+    # Creating new Position
+    create_position_payload = [{"type": position_type, "value": position_vals}]
+    pic.set_sender(data['user_a'])
+    pic.update_call(canister_id, "openPosition", ic.encode(params=create_position_payload))
+
+    # Build getPosition call payload
+    wrong_index = 1
+    get_position_payload = [
+        {"type": Types.Principal, "value": data['user_a'].to_str()},
+        {"type": Types.Nat, "value": wrong_index},
+    ]
+
+    # Build expected result type for getPosition method 'async Result<Position, Text>'
+    get_position_method_result_type = Types.Variant({"ok": position_type, "err": Types.Text})
+    result = pic.query_call(canister_id, "getPosition", ic.encode(params=get_position_payload))
+    unpacked_result = ic.decode(result, retTypes=get_position_method_result_type)[0]['value']['err']
+    assert unpacked_result == 'Position does not exist for this index'
+
+
+def test_get_position_negative_wrong_principal(data, pocket_ic_instance):
+
+    pic = pocket_ic_instance["pic"]
+    canister_id = pocket_ic_instance["canister_id"]
+    position_type = data["position_type"]
+    position_vals = data["position_vals"]
+
+    # Creating new Position
+    create_position_payload = [{"type": position_type, "value": position_vals}]
+    pic.set_sender(data['user_a'])
+    open_position_result = pic.update_call(canister_id, "openPosition", ic.encode(params=create_position_payload))
+    position_index: int = ic.decode(open_position_result)[0]['value']
+
+    # Build getPosition call payload
+    get_position_payload = [
+        {"type": Types.Principal, "value": data['user_b'].to_str()},
+        {"type": Types.Nat, "value": position_index},
+    ]
+
+    # Build expected result type for getPosition method 'async Result<Position, Text>'
+    get_position_method_result_type = Types.Variant({"ok": position_type, "err": Types.Text})
+    result = pic.query_call(canister_id, "getPosition", ic.encode(params=get_position_payload))
+    unpacked_result = ic.decode(result, retTypes=get_position_method_result_type)[0]['value']['err']
+    assert unpacked_result == 'Positions do not exist for this user'
