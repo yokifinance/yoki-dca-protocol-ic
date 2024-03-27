@@ -170,3 +170,92 @@ def test_get_position_negative_wrong_principal(data, pocket_ic_instance):
     result = pic.query_call(canister_id, "getPosition", ic.encode(params=get_position_payload))
     unpacked_result = ic.decode(result, retTypes=get_position_method_result_type)[0]['value']['err']
     assert unpacked_result == 'Positions do not exist for this user'
+
+
+def test_get_all_positions_positive(data, pocket_ic_instance):
+
+    pic = pocket_ic_instance["pic"]
+    canister_id = pocket_ic_instance["canister_id"]
+    position_type = data["position_type"]
+    position_vals = data["position_vals"]
+
+    # Creating new Position
+    create_position_payload = [{"type": position_type, "value": position_vals}]
+    pic.set_sender(data['user_a'])
+    pic.update_call(canister_id, "openPosition", ic.encode(params=create_position_payload))
+
+    # Build getAllPositions call payload
+    get_all_position_payload = [
+        {"type": Types.Principal, "value": data['user_a'].to_str()},
+    ]
+
+    # Build expected result type for getAllPositions method 'Result<[Position], Text>'
+    get_all_position_method_result_type = Types.Variant({"ok": Types.Vec(position_type), "err": Types.Text})
+    result = pic.query_call(canister_id, "getAllPositions", ic.encode(params=get_all_position_payload))
+    unpacked_result = ic.decode(result, retTypes=get_all_position_method_result_type)[0]['value']['ok']
+    position = unpacked_result[0]
+
+    assert len(unpacked_result) == 1
+    assert position['beneficiary'].to_str() == position_vals['beneficiary'], "beneficiary mismatch"
+    assert position['amountToSell'] == position_vals['amountToSell'], "amountToSell mismatch"
+    assert position['tokenToBuy'].to_str() == position_vals['tokenToBuy'], "tokenToBuy mismatch"
+    assert position['tokenToSell'].to_str() == position_vals['tokenToSell'], "tokenToSell mismatch"
+
+    # Check frequency Variant
+    if 'Daily' in position['frequency']:
+        assert 'Daily' in position_vals['frequency'], "Frequency is not Daily"
+    elif 'Weekly' in position['frequency']:
+        assert 'Weekly' in position_vals['frequency'], "Frequency is not Weekly"
+    elif 'Monthly' in position['frequency']:
+        assert 'Monthly' in position_vals['frequency'], "Frequency is not Monthly"
+    else:
+        raise ValueError("Unknown frequency")
+
+
+def test_get_all_positions_negative_wrong_principal(data, pocket_ic_instance):
+
+    pic = pocket_ic_instance["pic"]
+    canister_id = pocket_ic_instance["canister_id"]
+    position_type = data["position_type"]
+    position_vals = data["position_vals"]
+
+    # Creating new Position
+    create_position_payload = [{"type": position_type, "value": position_vals}]
+    pic.set_sender(data['user_a'])
+    pic.update_call(canister_id, "openPosition", ic.encode(params=create_position_payload))
+
+    # Build getAllPositions call payload
+    get_all_position_payload = [
+        {"type": Types.Principal, "value": data['user_b'].to_str()},
+    ]
+
+    # Build expected result type for getAllPositions method 'Result<[Position], Text>'
+    get_all_position_method_result_type = Types.Variant({"ok": Types.Vec(position_type), "err": Types.Text})
+    result = pic.query_call(canister_id, "getAllPositions", ic.encode(params=get_all_position_payload))
+    unpacked_result = ic.decode(result, retTypes=get_all_position_method_result_type)[0]['value']['err']
+    assert unpacked_result == 'Positions do not exist for this user'
+
+
+def test_close_position_positive(data, pocket_ic_instance):
+
+    pic = pocket_ic_instance["pic"]
+    canister_id = pocket_ic_instance["canister_id"]
+    position_type = data["position_type"]
+    position_vals = data["position_vals"]
+
+    # Creating new Position
+    create_position_payload = [{"type": position_type, "value": position_vals}]
+    pic.set_sender(data['user_a'])
+    open_position_result = pic.update_call(canister_id, "openPosition", ic.encode(params=create_position_payload))
+    position_index: int = ic.decode(open_position_result)[0]['value']
+
+    # Build clonePosition call payload
+    close_position_payload = [
+        {"type": Types.Principal, "value": data['user_a'].to_str(), "type": Types.Nat, "value": position_index},
+    ]
+
+    # Build expected result type for getAllPositions method 'Result<[Position], Text>'
+    close_position_payload_method_result_type = Types.Variant({"ok": Types.Text, "err": Types.Text})
+    result = pic.update_call(canister_id, "closePosition", ic.encode(params=close_position_payload))
+    unpacked_result = ic.decode(result, retTypes=close_position_payload_method_result_type)[0]['value']['ok']
+    assert unpacked_result == 'Position deleted'
