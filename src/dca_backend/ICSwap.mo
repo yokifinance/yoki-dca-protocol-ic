@@ -1,4 +1,5 @@
 import Error "mo:base/Error";
+import Nat64 "mo:base/Nat64";
 
 module {
     public type DepositArgs = {

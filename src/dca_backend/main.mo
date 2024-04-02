@@ -95,7 +95,7 @@ actor class DCA() = self {
         currentPositions.size() - 1;
     };
 
-    public query func readAllPositions(principal : Principal) : async Result<[Position], Text> {
+    public query func getAllPositions(principal : Principal) : async Result<[Position], Text> {
         switch (Map.get<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, principal)) {
             case (null) { return #err("Positions do not exist for this user") };
             case (?positions) {
@@ -178,7 +178,7 @@ actor class DCA() = self {
                             created_at_time = null;
                             amount = position.amountToSell + 10_000;
                         });
-                        return #ok("Position successfully executed !")
+                        return #ok("Position successfully executed !");
                     };
 
                 };
@@ -210,6 +210,24 @@ actor class DCA() = self {
         return sendIcpToICSwapResult;
     };
 
+    public shared func depositFromICSwap(amount : Nat) : async I.Result {
+        let depositFromICSwapResult = await ICPBTCpool.depositFrom({
+            fee = 10_000;
+            token = "ryjl3-tyaaa-aaaaa-aaaba-cai";
+            amount = amount;
+        });
+        return depositFromICSwapResult;
+    };
+
+    public shared func swapICPtockBTC(amount : Text) : async I.Result {
+        let swapResult = await ICPBTCpool.swap({
+            amountIn = amount;
+            zeroForOne = false;
+            amountOutMinimum = "0";
+        });
+        return swapResult;
+    };
+
     public shared func checkSonicBalance() : async Nat {
         let sonicSubbacount = await sonicCanister.initiateICRC1Transfer();
         let sonicBalance = await Ledger.icrc1_balance_of({
@@ -220,12 +238,19 @@ actor class DCA() = self {
     };
 
     public shared func applyDepositToDex(amount : Nat, token : Text) : async I.Result {
-        let applyDepositResult = await ICPBTCpool.deposit({
+        await ICPBTCpool.deposit({
             amount = amount;
             fee = 10_000;
             token = token;
         });
-        return applyDepositResult;
+    };
+
+    public shared func withdrawFromICPSwap(amount : Nat, token : Text) : async I.Result {
+        await ICPBTCpool.withdraw({
+            amount = amount;
+            fee = 10;
+            token = token;
+        });
     };
 
     // only for Development
@@ -258,7 +283,8 @@ actor class DCA() = self {
     };
 
     // only for Admin
-    public shared func approve(amount : Nat, to : Principal) : async Result<Nat, L.ApproveError> {
+    public shared ({ caller }) func approve(amount : Nat, to : Principal) : async Result<Nat, L.ApproveError> {
+        assert caller == Principal.fromText("hfugy-ahqdz-5sbki-vky4l-xceci-3se5z-2cb7k-jxjuq-qidax-gd53f-nqe");
         await _setApprove(amount, to);
     };
 
