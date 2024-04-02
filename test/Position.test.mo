@@ -79,9 +79,9 @@ await suite(
             },
         );
         await test(
-            "test readAllPositions positive case",
+            "test getAllPositions positive case",
             func() : async () {
-                let res = await dca.readAllPositions(testSuiteCallerPrincipal);
+                let res = await dca.getAllPositions(testSuiteCallerPrincipal);
                 switch (res) {
                     case (#ok(res)) {
                         assert res.size() == 1;
@@ -91,9 +91,9 @@ await suite(
             },
         );
         await test(
-            "test readAllPositions negative case - unkown principal",
+            "test getAllPositions negative case - unkown principal",
             func() : async () {
-                let res = await dca.readAllPositions(defaultPrincipal);
+                let res = await dca.getAllPositions(defaultPrincipal);
                 assert Result.isErr(res);
             },
         );
