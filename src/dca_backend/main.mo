@@ -75,7 +75,16 @@ actor class DCA() = self {
     };
 
     // // Method to create a new position
-    public shared ({ caller }) func openPosition(newPosition : Position) : async PositionId {
+    public shared ({ caller }) func openPosition(newPosition : Position) : async Result<PositionId, Text> {
+
+        if (newPosition.tokenToBuy != Principal.fromText("mxzaz-hqaaa-aaaar-qaada-cai")) {
+            return #err("Not supported token to buy :( Only ckBTC at this moment");
+        };
+
+        if (newPosition.tokenToSell != Principal.fromText("ryjl3-tyaaa-aaaaa-aaaba-cai")) {
+            return #err("Not supported token to sell :( Only ICP at this moment");
+        };
+
         let currentPositions = switch (Map.get<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, caller)) {
             case (null) {
                 // Create new Buffer if it does not exist
@@ -92,11 +101,12 @@ actor class DCA() = self {
 
         // Save the Buffer to the Map
         ignore Map.put<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, caller, currentPositions);
-        currentPositions.size() - 1;
+        #ok(currentPositions.size() - 1);
     };
 
-    public query func getAllPositions(principal : Principal) : async Result<[Position], Text> {
-        switch (Map.get<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, principal)) {
+    public shared query ({ caller }) func getAllPositions() : async Result<[Position], Text> {
+
+        switch (Map.get<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, caller)) {
             case (null) { return #err("Positions do not exist for this user") };
             case (?positions) {
                 let positionsArray = Buffer.toArray<Position>(positions);
@@ -105,8 +115,9 @@ actor class DCA() = self {
         };
     };
 
-    public query func getPosition(principal : Principal, index : Nat) : async Result<Position, Text> {
-        switch (Map.get<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, principal)) {
+    public shared query ({ caller }) func getPosition(index : Nat) : async Result<Position, Text> {
+
+        switch (Map.get<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, caller)) {
             case (null) { return #err("Positions do not exist for this user") };
             case (?positions) {
                 // use getOpt for safe getting position by index
@@ -121,8 +132,9 @@ actor class DCA() = self {
         };
     };
 
-    public func closePosition(principal : Principal, index : Nat) : async Result<Text, Text> {
-        switch (Map.get<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, principal)) {
+    public shared ({ caller }) func closePosition(index : Nat) : async Result<Text, Text> {
+
+        switch (Map.get<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, caller)) {
             case (null) { return #err("Positions do not exist for this user") };
             case (?positions) {
                 // use getOpt for safe getting position by index
