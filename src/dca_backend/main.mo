@@ -194,12 +194,6 @@ actor class DCA() = self {
         return Blob.fromArray(Array.freeze(defaultArr));
     };
 
-    public shared func depositToSonic(amount : Nat) : async Result<Nat, L.TransferError> {
-        let sonicSubaccount = await sonicCanister.initiateICRC1Transfer();
-        let to = Principal.fromActor(sonicCanister);
-        let sendIcpToDexResult = await _sendIcp(to, amount, ?sonicSubaccount);
-        return sendIcpToDexResult;
-    };
 
     public shared func depositToICSwap(amount : Nat) : async Result<Nat, L.TransferError> {
         let sendIcpToICSwapResult = await _sendIcp(Principal.fromActor(ICPBTCpool), amount, ?_principalToBlob(Principal.fromActor(self)));
@@ -222,15 +216,6 @@ actor class DCA() = self {
             amountOutMinimum = "0";
         });
         return swapResult;
-    };
-
-    public shared func checkSonicBalance() : async Nat {
-        let sonicSubbacount = await sonicCanister.initiateICRC1Transfer();
-        let sonicBalance = await Ledger.icrc1_balance_of({
-            owner = Principal.fromActor(sonicCanister);
-            subaccount = ?sonicSubbacount;
-        });
-        return sonicBalance;
     };
 
     public shared func applyDepositToDex(amount : Nat, token : Text) : async I.Result {
