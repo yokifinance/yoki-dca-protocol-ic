@@ -21,7 +21,6 @@ import Error "mo:base/Error";
 import L "./Ledger";
 import S "./Sonic";
 import I "./ICSwap";
-import Sonic "Sonic";
 
 actor class DCA() = self {
     // DCA Types
@@ -46,21 +45,6 @@ actor class DCA() = self {
         icrc2_approve : shared L.ApproveArgs -> async L.Result_1<>;
         icrc2_transfer_from : shared L.TransferFromArgs -> async L.Result_2<>;
         icrc1_balance_of : shared query L.Account -> async Nat;
-    };
-
-    // Create Sonic DEX actor actor
-    let sonicCanister = actor ("3xwpq-ziaaa-aaaah-qcn4a-cai") : actor {
-        getPair : shared query (Principal, Principal) -> async ?S.PairInfoExt;
-        swapExactTokensForTokens : shared (
-            Nat,
-            Nat,
-            [Text],
-            Principal,
-            Int,
-        ) -> async S.TxReceipt;
-        deposit : shared (Principal, Nat) -> async S.TxReceipt;
-        withdraw : shared (Principal, Nat) -> async S.TxReceipt;
-        initiateICRC1Transfer : shared () -> async Blob;
     };
 
     // Create ICP Swap ICP/ckBTC pool actor
