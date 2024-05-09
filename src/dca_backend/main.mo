@@ -58,6 +58,9 @@ actor class DCA() = self {
 
     };
 
+    // Set allowed worker to execute "executePurchase" method
+    let allowedWorker = Principal.fromText("ck7ps-dw2lz-7f2oo-lnkx3-mkndn-g2rva-6fxc7-ctsir-xi5vu-fuor3-fqe");
+
     // // Method to create a new position
     public shared ({ caller }) func openPosition(newPosition : Position) : async Result<PositionId, Text> {
 
@@ -137,7 +140,9 @@ actor class DCA() = self {
 
     };
 
-    public func executePurchase(principal : Principal, index : Nat) : async Result<Text, Text> {
+    public shared ({ caller }) func  executePurchase(principal : Principal, index : Nat) : async Result<Text, Text> {
+        if (caller != allowedWorker) { return #err("Only worker can execute this method") };
+
         switch (Map.get<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, principal)) {
             case (null) { return #err("Positions do not exist for this user") };
             case (?positions) {
@@ -148,35 +153,105 @@ actor class DCA() = self {
                         return #err("Position does not exist for this index");
                     };
                     case (?position) {
-                        ignore await Ledger.icrc2_transfer_from({
-                            to = {
-                                owner = Principal.fromActor(self);
-                                subaccount = null;
-                            };
-                            fee = ?10_000;
-                            spender_subaccount = null;
-                            from = {
-                                owner = position.beneficiary;
-                                subaccount = null;
-                            };
-                            memo = null;
-                            created_at_time = null;
-                            amount = position.amountToSell;
-                        });
-                        ignore await ckBtcLedger.icrc1_transfer({
-                            to = {
-                                owner = position.beneficiary;
-                                subaccount = null;
-                            };
-                            fee = ?10_000;
-                            memo = null;
-                            from_subaccount = null;
-                            created_at_time = null;
-                            amount = position.amountToSell + 10_000;
-                        });
-                        return #ok("Position successfully executed !");
+                        // Perform the multi-stage purchase
+                        let purchaseResult = await _performMultiStagePurchase(position);
+                        return purchaseResult;
                     };
+                };
+            };
+        };
+    };
+    private func _getBalance0(principal: Principal) : async Nat {
+        let result = await ICPBTCpool.getUserUnusedBalance(principal);
+        switch (result) {
+            case (#ok(record)) {
+                return record.balance0;
+            };
+            case (#err(_)) {
+                return 0;
+            };
+        };
+    };
 
+    public func getBalance0(principal: Principal) : async Nat {
+        let result = await ICPBTCpool.getUserUnusedBalance(principal);
+        switch (result) {
+            case (#ok {balance0; balance1}) {
+                return balance0;
+            };
+            case (#err(_)) {
+                return 0;
+            };
+        };
+    };
+
+    private func _performMultiStagePurchase(position : Position) : async Result<Text, Text> {
+        // Perform the multi-stage purchase
+        let transferResult = await Ledger.icrc2_transfer_from({
+            to = {
+                owner = Principal.fromActor(self);
+                subaccount = null;
+            };
+            fee = ?10_000;
+            spender_subaccount = null;
+            from = {
+                owner = position.beneficiary;
+                subaccount = null;
+            };
+            memo = null;
+            created_at_time = null;
+            amount = position.amountToSell;
+        });
+        switch transferResult {
+            case (#Err(error)) {
+                return #err("Error while transferring ICP to DCA" # debug_show(error));
+            };
+            case (#Ok(value)) {
+                let poolDepositResult = await ICPBTCpool.depositFrom({
+                    fee = 10_000;
+                    token = Principal.toText(position.tokenToSell);
+                    amount = position.amountToSell;
+                });
+                switch poolDepositResult {
+                    case (#err(error)) {
+                        return #err("Error while depositing ICP to pool" # debug_show(error));
+                    };
+                    case (#ok(value)) {
+                        let swapPoolResult = await ICPBTCpool.swap({
+                            amountIn = Nat.toText(position.amountToSell);
+                            zeroForOne = false;
+                            amountOutMinimum = "0"; // Should be calculated based on the Quoter * (% of slippage)
+                        });
+                        switch swapPoolResult {
+                            case (#err(error)) {
+                                return #err("Error while swaping ICP to ckBTC in ICPSwap" # debug_show(error));
+                            };
+                            case (#ok(value)) {
+                                let balance0Result = await _getBalance0(Principal.fromActor(self));
+                                let withdrawResult = await ICPBTCpool.withdraw({
+                                    amount = balance0Result;
+                                    fee = 10; // Default ckBTC fee
+                                    token = Principal.toText(position.tokenToBuy);
+                                });
+                                switch withdrawResult {
+                                    case (#err(error)) {
+                                        return #err("Error while withdrawing ckBTC from pool" # debug_show(error));
+                                    };
+                                    case (#ok(value)) {
+                                        let sendCkBtcResult = await _sendCkBTC(position.beneficiary, balance0Result, null);
+                                        switch sendCkBtcResult {
+                                            case (#err(error)) {
+                                                return #err("Error while transferring ckBTC to beneficiary" # debug_show(error));
+                                            };
+                                            case (#ok(value)) {
+                                                return #ok("Position successfully executed !");
+                                            };
+                                        };
+                                    };
+                                };
+                            };
+                        };
+                    };
                 };
             };
         };
@@ -254,6 +329,29 @@ actor class DCA() = self {
         });
 
         switch icp_reciept {
+            case (#Err(error)) {
+                return #err(error);
+            };
+            case (#Ok(value)) {
+                return #ok(value);
+            };
+        };
+    };
+
+    private func _sendCkBTC(address : Principal, amount : Nat, subaccount : ?Blob) : async Result<Nat, L.TransferError> {
+        Debug.print("Sending ckBTC to:" # Principal.toText(address));
+
+        // Transfer from this Canister to an address
+        let ckBtcReciept = await ckBtcLedger.icrc1_transfer({
+            amount = amount;
+            to = { owner = address; subaccount = subaccount };
+            from_subaccount = null;
+            memo = null;
+            fee = ?10; // default ICP fee
+            created_at_time = ?Nat64.fromNat(Int.abs(Time.now()));
+        });
+
+        switch ckBtcReciept {
             case (#Err(error)) {
                 return #err(error);
             };
