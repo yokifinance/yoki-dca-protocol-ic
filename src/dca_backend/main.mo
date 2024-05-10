@@ -39,7 +39,7 @@ actor class DCA() = self {
         icrc1_balance_of : shared query L.Account -> async Nat;
     };
 
-    // Create ICP Ledger actor
+    // Create ckBTC Ledger actor
     let ckBtcLedger = actor ("mxzaz-hqaaa-aaaar-qaada-cai") : actor {
         icrc1_transfer : shared L.TransferArg -> async L.Result<>;
         icrc2_approve : shared L.ApproveArgs -> async L.Result_1<>;
