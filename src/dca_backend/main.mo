@@ -13,6 +13,7 @@ import { phash } "mo:map/Map";
 import Debug "mo:base/Debug";
 import Account "./Account";
 import Time "mo:base/Time";
+import Timer "mo:base/Timer";
 import Int "mo:base/Int";
 import Blob "mo:base/Blob";
 import Nat8 "mo:base/Nat8";
@@ -21,12 +22,14 @@ import Error "mo:base/Error";
 import L "./Ledger";
 import S "./Sonic";
 import I "./ICSwap";
+import {MINUTE; DAY; HOUR;} "mo:time-consts";
 
 actor class DCA() = self {
     // DCA Types
     type Result<A, B> = Result.Result<A, B>;
     type PositionId = Types.PositionId;
     type Position = Types.Position;
+    type TimerActionType = Types.TimerActionType;
 
     // Create HashMap to store a positions
     let positionsLedger = Map.new<Principal, Buffer.Buffer<Position>>();
@@ -392,4 +395,56 @@ actor class DCA() = self {
         };
     };
 
+    // Timers
+
+    // private func checkAndExecutePositions() : async () {
+    //     let currentTime = Time.now();
+    //     for (user, userSchedule) in positionsLedger.entries() {
+    //         for (positionId, schedule) in userSchedule.entries() {
+    //             if (currentTime >= schedule.nextRunTime) {
+    //                 // Вызов executePurchase
+    //                 ignore executePurchase(user, positionId);
+    //                 // Обновление времени следующего запуска
+    //                 schedule.nextRunTime := currentTime + schedule.frequency;
+    //             }
+    //         }
+    //     }
+    // }
+
+    private func printAllPositions() : async () {
+
+        let entries = Map.entries(positionsLedger);
+        for ((user, positionsBuffer) in entries) {
+            let positionsArray = Buffer.toArray(positionsBuffer);
+            Debug.print("User: " # Principal.toText(user) # "Position Details: " # debug_show(positionsArray));
+        };
+    };
+
+    public func printAllPositions_2() : async () {
+        let entries = Map.entries(positionsLedger);
+        for ((user, positionsBuffer) in entries) {
+            let positionsArray = Buffer.toArray(positionsBuffer);
+            Debug.print("User: " # Principal.toText(user) # "Position Details: " # debug_show(positionsArray));
+        };
+    };
+
+    public shared ({ caller }) func editTimer(timerId: Nat, actionType: TimerActionType) : async Result<Text, Text> {
+        if (caller != Principal.fromText("hfugy-ahqdz-5sbki-vky4l-xceci-3se5z-2cb7k-jxjuq-qidax-gd53f-nqe")) {
+            return #err("Only worker can execute this method"); 
+        };
+        switch (actionType) {
+            case (#StartTimer) {
+                let timerId = await _startScheduler();
+                return #ok(Nat.toText(timerId));
+            };
+            case (#StopTimer) {
+                Timer.cancelTimer(timerId);
+                return #ok("0");
+            };
+        };
+    };
+
+    private func _startScheduler() : async Nat {
+        Timer.recurringTimer<system>(((#seconds MINUTE), printAllPositions));
+    };
 };
