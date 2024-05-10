@@ -17,7 +17,7 @@ module {
         amountOutMinimum : Text;
     };
 
-    public type Result = { #ok : Nat64; #err : CustomError };
+    public type Result = { #ok : Nat; #err : CustomError };
 
     public type CustomError = {
         #CommonError;
@@ -27,8 +27,8 @@ module {
     };
 
     public type Result_7 = {
-        #Ok : { balance0 : Nat; balance1 : Nat };
-        #Err : Text;
+        #ok : { balance0 : Nat; balance1 : Nat };
+        #err : CustomError;
     };
 
     public type Self = actor {
