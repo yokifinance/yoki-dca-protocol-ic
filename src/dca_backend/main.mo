@@ -435,16 +435,18 @@ actor class DCA() = self {
         switch (actionType) {
             case (#StartTimer) {
                 let timerId = await _startScheduler();
+                Debug.print("Timer: " # debug_show(timerId) # " created");
                 return #ok(Nat.toText(timerId));
             };
             case (#StopTimer) {
                 Timer.cancelTimer(timerId);
+                Debug.print("Timer: " # debug_show(timerId) # " was deleted");
                 return #ok("0");
             };
         };
     };
 
     private func _startScheduler() : async Nat {
-        Timer.recurringTimer<system>(((#seconds MINUTE), printAllPositions));
+        Timer.recurringTimer<system>(((#nanoseconds MINUTE), printAllPositions));
     };
 };
