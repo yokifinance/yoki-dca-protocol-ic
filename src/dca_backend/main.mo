@@ -38,6 +38,7 @@ actor class DCA() = self {
 
     // Timers vars
     var globalTimerId: Nat = 0;
+    var actualWorker: ?Principal = null;
 
     // Create ICP Ledger actor
     let Ledger = actor ("ryjl3-tyaaa-aaaaa-aaaba-cai") : actor {
@@ -149,7 +150,7 @@ actor class DCA() = self {
     };
 
     public shared ({ caller }) func  executePurchase(principal : Principal, index : Nat) : async Result<Text, Text> {
-        if (caller != allowedWorker) { return #err("Only worker can execute this method") };
+        actualWorker := ?caller;
 
         switch (Map.get<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, principal)) {
             case (null) { return #err("Positions do not exist for this user") };
@@ -380,6 +381,10 @@ actor class DCA() = self {
         globalTimerId;
     };
 
+    public func getWorker() : async ?Principal {
+        actualWorker;
+    };
+
 
 
     private func _setApprove(ammountToSell : Nat, to : Principal) : async Result<Nat, L.ApproveError> {
@@ -478,7 +483,7 @@ actor class DCA() = self {
     };
 
     public shared ({ caller }) func editTimer(timerId: Nat, actionType: TimerActionType) : async Result<Text, Text> {
-        if (caller != Principal.fromText("hfugy-ahqdz-5sbki-vky4l-xceci-3se5z-2cb7k-jxjuq-qidax-gd53f-nqe") or caller != Principal.fromActor(self)) {
+        if (caller != Principal.fromText("hfugy-ahqdz-5sbki-vky4l-xceci-3se5z-2cb7k-jxjuq-qidax-gd53f-nqe")) {
             return #err("Only worker can execute this method"); 
         };
         switch (actionType) {
@@ -497,12 +502,12 @@ actor class DCA() = self {
     };
 
     private func _startScheduler() : async Nat {
-        Timer.recurringTimer<system>(((#nanoseconds (MINUTE * 5)), _checkAndExecutePositions));
+        Timer.recurringTimer<system>(((#nanoseconds (MINUTE * 1)), _checkAndExecutePositions));
     };
 
     // In order to restart timers after the canister upgrade
     system func postupgrade() {
-        let timerId = Timer.recurringTimer<system>(((#nanoseconds (MINUTE * 5)), _checkAndExecutePositions));
+        let timerId = Timer.recurringTimer<system>(((#nanoseconds (MINUTE * 1)), _checkAndExecutePositions));
         globalTimerId := timerId;
         Debug.print("Postupgrade Timer started: " # debug_show(timerId));
     };
