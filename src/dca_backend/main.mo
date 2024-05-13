@@ -36,6 +36,9 @@ actor class DCA() = self {
     // Create HashMap to store a positions
     let positionsLedger = Map.new<Principal, Buffer.Buffer<Position>>();
 
+    // Timers vars
+    var globalTimerId: Nat = 0;
+
     // Create ICP Ledger actor
     let Ledger = actor ("ryjl3-tyaaa-aaaaa-aaaba-cai") : actor {
         icrc1_transfer : shared L.TransferArg -> async L.Result<>;
@@ -372,6 +375,13 @@ actor class DCA() = self {
         await _setApprove(amount, to);
     };
 
+    public shared ({ caller }) func getGlobalTimerId() : async Nat {
+        assert caller == Principal.fromText("hfugy-ahqdz-5sbki-vky4l-xceci-3se5z-2cb7k-jxjuq-qidax-gd53f-nqe");
+        globalTimerId;
+    };
+
+
+
     private func _setApprove(ammountToSell : Nat, to : Principal) : async Result<Nat, L.ApproveError> {
 
         let approve = await Ledger.icrc2_approve({
@@ -436,7 +446,7 @@ actor class DCA() = self {
                         beneficiary = position.beneficiary;
                         frequency = position.frequency;
                         nextRunTime = ?newNextRunTime;
-                        lastPurchaseResult = purchaseResult;
+                        lastPurchaseResult = ?purchaseResult;
                     };
                     updatedPositions.add(newPosition);
                     updatesMade := true;
@@ -449,7 +459,6 @@ actor class DCA() = self {
             };
         };
     };
-
 
     private func printAllPositions() : async () {
 
@@ -469,13 +478,14 @@ actor class DCA() = self {
     };
 
     public shared ({ caller }) func editTimer(timerId: Nat, actionType: TimerActionType) : async Result<Text, Text> {
-        if (caller != Principal.fromText("hfugy-ahqdz-5sbki-vky4l-xceci-3se5z-2cb7k-jxjuq-qidax-gd53f-nqe")) {
+        if (caller != Principal.fromText("hfugy-ahqdz-5sbki-vky4l-xceci-3se5z-2cb7k-jxjuq-qidax-gd53f-nqe") or caller != Principal.fromActor(self)) {
             return #err("Only worker can execute this method"); 
         };
         switch (actionType) {
             case (#StartTimer) {
                 let timerId = await _startScheduler();
                 Debug.print("Timer: " # debug_show(timerId) # " created");
+                globalTimerId := timerId;
                 return #ok(Nat.toText(timerId));
             };
             case (#StopTimer) {
@@ -487,12 +497,13 @@ actor class DCA() = self {
     };
 
     private func _startScheduler() : async Nat {
-        Timer.recurringTimer<system>(((#nanoseconds MINUTE), printAllPositions));
+        Timer.recurringTimer<system>(((#nanoseconds (MINUTE * 5)), _checkAndExecutePositions));
     };
 
     // In order to restart timers after the canister upgrade
     system func postupgrade() {
-        let timerId = Timer.recurringTimer<system>(((#nanoseconds MINUTE), printAllPositions));
+        let timerId = Timer.recurringTimer<system>(((#nanoseconds (MINUTE * 5)), _checkAndExecutePositions));
+        globalTimerId := timerId;
         Debug.print("Postupgrade Timer started: " # debug_show(timerId));
     };
 };

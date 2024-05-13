@@ -15,7 +15,7 @@ module {
         tokenToSell : Principal;
         frequency : Frequency;
         nextRunTime: ?Time.Time;
-        lastPurchaseResult: Result.Result<Text, Text>;
+        lastPurchaseResult: ?Result.Result<Text, Text>;
     };
 
     public type Frequency = {
