@@ -1,5 +1,6 @@
 import HashMap "mo:base/HashMap";
 import Hash "mo:base/Hash";
+import Iter "mo:base/Iter";
 import Nat "mo:base/Nat";
 import Nat64 "mo:base/Nat64";
 import Principal "mo:base/Principal";
@@ -22,7 +23,7 @@ import Error "mo:base/Error";
 import L "./Ledger";
 import S "./Sonic";
 import I "./ICSwap";
-import {MINUTE; DAY; HOUR;} "mo:time-consts";
+import {MINUTE; DAY; HOUR; WEEK;} "mo:time-consts";
 
 actor class DCA() = self {
     // DCA Types
@@ -30,6 +31,7 @@ actor class DCA() = self {
     type PositionId = Types.PositionId;
     type Position = Types.Position;
     type TimerActionType = Types.TimerActionType;
+    type Frequency = Types.Frequency;
 
     // Create HashMap to store a positions
     let positionsLedger = Map.new<Principal, Buffer.Buffer<Position>>();
@@ -176,17 +178,17 @@ actor class DCA() = self {
         };
     };
 
-    public func getBalance0(principal: Principal) : async Nat {
-        let result = await ICPBTCpool.getUserUnusedBalance(principal);
-        switch (result) {
-            case (#ok {balance0; balance1}) {
-                return balance0;
-            };
-            case (#err(_)) {
-                return 0;
-            };
-        };
-    };
+    // public func getBalance0(principal: Principal) : async Nat {
+    //     let result = await ICPBTCpool.getUserUnusedBalance(principal);
+    //     switch (result) {
+    //         case (#ok {balance0; balance1}) {
+    //             return balance0;
+    //         };
+    //         case (#err(_)) {
+    //             return 0;
+    //         };
+    //     };
+    // };
 
     private func _performMultiStagePurchase(position : Position) : async Result<Text, Text> {
         // Perform the multi-stage purchase
@@ -395,21 +397,59 @@ actor class DCA() = self {
         };
     };
 
+    private func _getTimestampFromFrequency(frequency : Frequency) : Time.Time {
+        switch (frequency) {
+            case (#Daily) {
+                DAY;
+            };
+            case (#Weekly) {
+                WEEK;
+            };
+            case (#Monthly) {
+                WEEK * 4;
+            };
+        };
+    };
+
     // Timers
 
-    // private func checkAndExecutePositions() : async () {
-    //     let currentTime = Time.now();
-    //     for (user, userSchedule) in positionsLedger.entries() {
-    //         for (positionId, schedule) in userSchedule.entries() {
-    //             if (currentTime >= schedule.nextRunTime) {
-    //                 // Вызов executePurchase
-    //                 ignore executePurchase(user, positionId);
-    //                 // Обновление времени следующего запуска
-    //                 schedule.nextRunTime := currentTime + schedule.frequency;
-    //             }
-    //         }
-    //     }
-    // }
+    private func _checkAndExecutePositions() : async () {
+        let currentTime = Time.now();
+        let entries = Map.entries(positionsLedger);
+        for ((user, positionsBuffer) in entries) {
+            let positionsArray = Buffer.toArray(positionsBuffer);
+            let updatedPositions = Buffer.Buffer<Position>(0);
+            var updatesMade: Bool = false;
+
+            for (positionId in Iter.range(0, positionsArray.size() - 1)) {
+                let position: Position = positionsArray[positionId];
+                if (currentTime >= Option.get(position.nextRunTime, 0)) {
+                    // Call executePurchase with the correct positionId
+                    let purchaseResult = await executePurchase(user, positionId);
+                    let newNextRunTime = currentTime + _getTimestampFromFrequency(position.frequency);
+
+                    // Create a new position state
+                    let newPosition: Position = {
+                        tokenToBuy = position.tokenToBuy;
+                        tokenToSell = position.tokenToSell;
+                        amountToSell = position.amountToSell;
+                        beneficiary = position.beneficiary;
+                        frequency = position.frequency;
+                        nextRunTime = ?newNextRunTime;
+                        lastPurchaseResult = purchaseResult;
+                    };
+                    updatedPositions.add(newPosition);
+                    updatesMade := true;
+                };
+            };
+
+            // If any updates were made, convert array back to Buffer and update the map
+            if (updatesMade) {
+                ignore Map.put<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, user, updatedPositions);
+            };
+        };
+    };
+
 
     private func printAllPositions() : async () {
 
@@ -448,5 +488,11 @@ actor class DCA() = self {
 
     private func _startScheduler() : async Nat {
         Timer.recurringTimer<system>(((#nanoseconds MINUTE), printAllPositions));
+    };
+
+    // In order to restart timers after the canister upgrade
+    system func postupgrade() {
+        let timerId = Timer.recurringTimer<system>(((#nanoseconds MINUTE), printAllPositions));
+        Debug.print("Postupgrade Timer started: " # debug_show(timerId));
     };
 };
