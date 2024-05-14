@@ -31,6 +31,11 @@ module {
         #err : CustomError;
     };
 
+    public type Result_8 = {
+        #ok : Nat;
+        #err : CustomError;
+    };
+
     public type Self = actor {
         deposit : shared DepositArgs -> async Result;
         swap : shared SwapArgs -> async Result;

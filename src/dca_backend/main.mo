@@ -59,7 +59,8 @@ actor class DCA() = self {
         swap : shared (I.SwapArgs) -> async I.Result;
         getUserUnusedBalance : shared query (Principal) -> async I.Result_7;
         withdraw : shared (I.WithdrawArgs) -> async I.Result;
-        applyDepositToDex : shared (I.DepositArgs) -> async I.Result
+        applyDepositToDex : shared (I.DepositArgs) -> async I.Result;
+        quote : shared query (I.SwapArgs) -> async I.Result_8;
 
     };
 
@@ -212,6 +213,7 @@ actor class DCA() = self {
                         return #err("Error while depositing ICP to pool" # debug_show(error));
                     };
                     case (#ok(value)) {
+                        // let defaultAmountOutMinimum = _getAmountOutMinimum(position.amountToSell);
                         let swapPoolResult = await ICPBTCpool.swap({
                             amountIn = Nat.toText(position.amountToSell);
                             zeroForOne = false;
@@ -296,6 +298,23 @@ actor class DCA() = self {
     };
 
     // only for Development
+
+    public func getQuote (): async Nat{
+        let quote = await ICPBTCpool.quote({
+            amountIn = "100_000";
+            amountOutMinimum = "0";
+            zeroForOne = false;
+        });
+        switch (quote) {
+            case (#ok(value)) {
+                return value;
+            };
+            case (#err(error)) {
+                return 0;
+            };
+        };
+    };
+
     public shared ({ caller }) func withdraw(amount : Nat, address : Principal) : async Result<Nat, L.TransferError> {
         assert caller == admin;
         await _sendIcp(address, amount, null);
