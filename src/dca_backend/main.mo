@@ -146,8 +146,9 @@ actor class DCA() = self {
     };
 
     public shared ({ caller }) func  executePurchase(principal : Principal, index : Nat) : async Result<Text, Text> {
-        actualWorker := ?caller;
-
+        if (caller != Principal.fromActor(self)){
+            return #err("Only DCA canister can execute this method");
+        };
         switch (Map.get<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, principal)) {
             case (null) { return #err("There are no positions available for this user") };
             case (?positions) {
@@ -166,6 +167,7 @@ actor class DCA() = self {
             };
         };
     };
+
     private func _getBalance0(principal: Principal) : async Nat {
         let result = await ICPBTCpool.getUserUnusedBalance(principal);
         switch (result) {
@@ -213,7 +215,7 @@ actor class DCA() = self {
                         let swapPoolResult = await ICPBTCpool.swap({
                             amountIn = Nat.toText(position.amountToSell);
                             zeroForOne = false;
-                            amountOutMinimum = "0"; // Should be calculated based on the Quoter * (% of slippage)
+                            amountOutMinimum = "0"; // YID-6 Should be calculated based on the Quoter * (% of slippage)
                         });
                         switch swapPoolResult {
                             case (#err(error)) {
