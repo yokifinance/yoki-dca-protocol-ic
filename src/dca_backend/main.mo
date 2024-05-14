@@ -52,7 +52,7 @@ actor class DCA() = self {
         icrc1_balance_of : shared query L.Account -> async Nat;
     };
 
-    // Create ICP Swap ICP/ckBTC pool actor
+    // Create ICPSwap ICP/ckBTC pool actor
     let ICPBTCpool = actor ("xmiu5-jqaaa-aaaag-qbz7q-cai") : actor {
         deposit : shared (I.DepositArgs) -> async I.Result;
         depositFrom : shared (I.DepositArgs) -> async I.Result;
@@ -64,7 +64,7 @@ actor class DCA() = self {
     };
 
     // Set allowed worker to execute "executePurchase" method
-    let admin = Principal.fromText("ck7ps-dw2lz-7f2oo-lnkx3-mkndn-g2rva-6fxc7-ctsir-xi5vu-fuor3-fqe");
+    let admin = Principal.fromText("hfugy-ahqdz-5sbki-vky4l-xceci-3se5z-2cb7k-jxjuq-qidax-gd53f-nqe");
 
     // Method to create a new position
     public shared ({ caller }) func openPosition(newPosition : Position) : async Result<PositionId, Text> {
@@ -99,7 +99,7 @@ actor class DCA() = self {
     public shared query ({ caller }) func getAllPositions() : async Result<[Position], Text> {
 
         switch (Map.get<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, caller)) {
-            case (null) { return #err("Positions do not exist for this user") };
+            case (null) { return #err("There are no positions available for this user") };
             case (?positions) {
                 let positionsArray = Buffer.toArray<Position>(positions);
                 return #ok(positionsArray);
@@ -110,7 +110,7 @@ actor class DCA() = self {
     public shared query ({ caller }) func getPosition(index : Nat) : async Result<Position, Text> {
 
         switch (Map.get<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, caller)) {
-            case (null) { return #err("Positions do not exist for this user") };
+            case (null) { return #err("There are no positions available for this user") };
             case (?positions) {
                 // use getOpt for safe getting position by index
                 let position = positions.getOpt(index);
@@ -127,7 +127,7 @@ actor class DCA() = self {
     public shared ({ caller }) func closePosition(index : Nat) : async Result<Text, Text> {
 
         switch (Map.get<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, caller)) {
-            case (null) { return #err("Positions do not exist for this user") };
+            case (null) { return #err("There are no positions available for this user") };
             case (?positions) {
                 // use getOpt for safe getting position by index
                 let position = positions.getOpt(index);
@@ -149,7 +149,7 @@ actor class DCA() = self {
         actualWorker := ?caller;
 
         switch (Map.get<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, principal)) {
-            case (null) { return #err("Positions do not exist for this user") };
+            case (null) { return #err("There are no positions available for this user") };
             case (?positions) {
                 // use getOpt for safe getting position by index
                 let position = positions.getOpt(index);
@@ -268,15 +268,6 @@ actor class DCA() = self {
         return sendIcpToICSwapResult;
     };
 
-    public shared func depositFromICSwap(amount : Nat) : async I.Result {
-        let depositFromICSwapResult = await ICPBTCpool.depositFrom({
-            fee = 10_000;
-            token = "ryjl3-tyaaa-aaaaa-aaaba-cai";
-            amount = amount;
-        });
-        return depositFromICSwapResult;
-    };
-
     public shared func swapICPtockBTC(amount : Text) : async I.Result {
         let swapResult = await ICPBTCpool.swap({
             amountIn = amount;
@@ -369,7 +360,8 @@ actor class DCA() = self {
         actualWorker;
     };
 
-    public func getDCAUnusedBalance(principal: Principal) : async Result<Text, Text> {
+    public shared ({ caller }) func getDCAUnusedBalance(principal: Principal) : async Result<Text, Text> {
+        assert caller == admin;
         let result = await ICPBTCpool.getUserUnusedBalance(principal);
         switch (result) {
             case (#ok {balance0; balance1}) {
@@ -407,6 +399,8 @@ actor class DCA() = self {
         };
     };
 
+    // Timers
+
     private func _getTimestampFromFrequency(frequency : Frequency) : Time.Time {
         switch (frequency) {
             case (#Daily) {
@@ -420,8 +414,6 @@ actor class DCA() = self {
             };
         };
     };
-
-    // Timers
 
     private func _checkAndExecutePositions() : async () {
         let currentTime = Time.now();
