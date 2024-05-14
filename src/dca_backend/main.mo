@@ -1,35 +1,40 @@
-import HashMap "mo:base/HashMap";
-import Hash "mo:base/Hash";
+import Array "mo:base/Array";
+import Blob "mo:base/Blob";
+import Buffer "mo:base/Buffer";
+import Debug "mo:base/Debug";
+import Int "mo:base/Int";
+import Iter "mo:base/Iter";
 import Nat "mo:base/Nat";
 import Nat64 "mo:base/Nat64";
-import Principal "mo:base/Principal";
-import Text "mo:base/Text";
-import Buffer "mo:base/Buffer";
-import Types "types";
-import Result "mo:base/Result";
+import Nat8 "mo:base/Nat8";
 import Option "mo:base/Option";
+import Principal "mo:base/Principal";
+import Result "mo:base/Result";
+import Text "mo:base/Text";
+import Time "mo:base/Time";
+import Timer "mo:base/Timer";
 import Map "mo:map/Map";
 import { phash } "mo:map/Map";
-import Debug "mo:base/Debug";
-import Account "./Account";
-import Time "mo:base/Time";
-import Int "mo:base/Int";
-import Blob "mo:base/Blob";
-import Nat8 "mo:base/Nat8";
-import Array "mo:base/Array";
-import Error "mo:base/Error";
-import L "./Ledger";
-import S "./Sonic";
+import { DAY; MINUTE; WEEK } "mo:time-consts";
+
 import I "./ICSwap";
+import L "./Ledger";
+import Types "types";
 
 actor class DCA() = self {
     // DCA Types
     type Result<A, B> = Result.Result<A, B>;
     type PositionId = Types.PositionId;
     type Position = Types.Position;
+    type TimerActionType = Types.TimerActionType;
+    type Frequency = Types.Frequency;
 
     // Create HashMap to store a positions
     let positionsLedger = Map.new<Principal, Buffer.Buffer<Position>>();
+
+    // Timers vars
+    var globalTimerId: Nat = 0;
+    var actualWorker: ?Principal = null;
 
     // Create ICP Ledger actor
     let Ledger = actor ("ryjl3-tyaaa-aaaaa-aaaba-cai") : actor {
@@ -47,7 +52,7 @@ actor class DCA() = self {
         icrc1_balance_of : shared query L.Account -> async Nat;
     };
 
-    // Create ICP Swap ICP/ckBTC pool actor
+    // Create ICPSwap ICP/ckBTC pool actor
     let ICPBTCpool = actor ("xmiu5-jqaaa-aaaag-qbz7q-cai") : actor {
         deposit : shared (I.DepositArgs) -> async I.Result;
         depositFrom : shared (I.DepositArgs) -> async I.Result;
@@ -59,9 +64,9 @@ actor class DCA() = self {
     };
 
     // Set allowed worker to execute "executePurchase" method
-    let allowedWorker = Principal.fromText("ck7ps-dw2lz-7f2oo-lnkx3-mkndn-g2rva-6fxc7-ctsir-xi5vu-fuor3-fqe");
+    let admin = Principal.fromText("hfugy-ahqdz-5sbki-vky4l-xceci-3se5z-2cb7k-jxjuq-qidax-gd53f-nqe");
 
-    // // Method to create a new position
+    // Method to create a new position
     public shared ({ caller }) func openPosition(newPosition : Position) : async Result<PositionId, Text> {
 
         if (newPosition.tokenToBuy != Principal.fromText("mxzaz-hqaaa-aaaar-qaada-cai")) {
@@ -94,7 +99,7 @@ actor class DCA() = self {
     public shared query ({ caller }) func getAllPositions() : async Result<[Position], Text> {
 
         switch (Map.get<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, caller)) {
-            case (null) { return #err("Positions do not exist for this user") };
+            case (null) { return #err("There are no positions available for this user") };
             case (?positions) {
                 let positionsArray = Buffer.toArray<Position>(positions);
                 return #ok(positionsArray);
@@ -105,7 +110,7 @@ actor class DCA() = self {
     public shared query ({ caller }) func getPosition(index : Nat) : async Result<Position, Text> {
 
         switch (Map.get<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, caller)) {
-            case (null) { return #err("Positions do not exist for this user") };
+            case (null) { return #err("There are no positions available for this user") };
             case (?positions) {
                 // use getOpt for safe getting position by index
                 let position = positions.getOpt(index);
@@ -122,7 +127,7 @@ actor class DCA() = self {
     public shared ({ caller }) func closePosition(index : Nat) : async Result<Text, Text> {
 
         switch (Map.get<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, caller)) {
-            case (null) { return #err("Positions do not exist for this user") };
+            case (null) { return #err("There are no positions available for this user") };
             case (?positions) {
                 // use getOpt for safe getting position by index
                 let position = positions.getOpt(index);
@@ -141,10 +146,10 @@ actor class DCA() = self {
     };
 
     public shared ({ caller }) func  executePurchase(principal : Principal, index : Nat) : async Result<Text, Text> {
-        if (caller != allowedWorker) { return #err("Only worker can execute this method") };
+        actualWorker := ?caller;
 
         switch (Map.get<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, principal)) {
-            case (null) { return #err("Positions do not exist for this user") };
+            case (null) { return #err("There are no positions available for this user") };
             case (?positions) {
                 // use getOpt for safe getting position by index
                 let position = positions.getOpt(index);
@@ -166,18 +171,6 @@ actor class DCA() = self {
         switch (result) {
             case (#ok(record)) {
                 return record.balance0;
-            };
-            case (#err(_)) {
-                return 0;
-            };
-        };
-    };
-
-    public func getBalance0(principal: Principal) : async Nat {
-        let result = await ICPBTCpool.getUserUnusedBalance(principal);
-        switch (result) {
-            case (#ok {balance0; balance1}) {
-                return balance0;
             };
             case (#err(_)) {
                 return 0;
@@ -275,15 +268,6 @@ actor class DCA() = self {
         return sendIcpToICSwapResult;
     };
 
-    public shared func depositFromICSwap(amount : Nat) : async I.Result {
-        let depositFromICSwapResult = await ICPBTCpool.depositFrom({
-            fee = 10_000;
-            token = "ryjl3-tyaaa-aaaaa-aaaba-cai";
-            amount = amount;
-        });
-        return depositFromICSwapResult;
-    };
-
     public shared func swapICPtockBTC(amount : Text) : async I.Result {
         let swapResult = await ICPBTCpool.swap({
             amountIn = amount;
@@ -311,7 +295,7 @@ actor class DCA() = self {
 
     // only for Development
     public shared ({ caller }) func withdraw(amount : Nat, address : Principal) : async Result<Nat, L.TransferError> {
-        assert caller == Principal.fromText("hfugy-ahqdz-5sbki-vky4l-xceci-3se5z-2cb7k-jxjuq-qidax-gd53f-nqe");
+        assert caller == admin;
         await _sendIcp(address, amount, null);
     };
 
@@ -363,9 +347,32 @@ actor class DCA() = self {
 
     // only for Admin
     public shared ({ caller }) func approve(amount : Nat, to : Principal) : async Result<Nat, L.ApproveError> {
-        assert caller == Principal.fromText("hfugy-ahqdz-5sbki-vky4l-xceci-3se5z-2cb7k-jxjuq-qidax-gd53f-nqe");
+        assert caller == admin;
         await _setApprove(amount, to);
     };
+
+    public shared ({ caller }) func getGlobalTimerId() : async Nat {
+        assert caller == admin;
+        globalTimerId;
+    };
+
+    public func getWorker() : async ?Principal {
+        actualWorker;
+    };
+
+    public shared ({ caller }) func getDCAUnusedBalance(principal: Principal) : async Result<Text, Text> {
+        assert caller == admin;
+        let result = await ICPBTCpool.getUserUnusedBalance(principal);
+        switch (result) {
+            case (#ok {balance0; balance1}) {
+                return #ok("ckBTC: " #Nat.toText(balance0) # "ICP: " #Nat.toText(balance1));
+            };
+            case (#err(_)) {
+                return #err("Error while getting balance");
+            };
+        };
+    };
+
 
     private func _setApprove(ammountToSell : Nat, to : Principal) : async Result<Nat, L.ApproveError> {
 
@@ -392,4 +399,86 @@ actor class DCA() = self {
         };
     };
 
+    // Timers
+
+    private func _getTimestampFromFrequency(frequency : Frequency) : Time.Time {
+        switch (frequency) {
+            case (#Daily) {
+                DAY;
+            };
+            case (#Weekly) {
+                WEEK;
+            };
+            case (#Monthly) {
+                WEEK * 4;
+            };
+        };
+    };
+
+    private func _checkAndExecutePositions() : async () {
+        let currentTime = Time.now();
+        let entries = Map.entries(positionsLedger);
+        for ((user, positionsBuffer) in entries) {
+            let positionsArray = Buffer.toArray(positionsBuffer);
+            let updatedPositions = Buffer.Buffer<Position>(0);
+            var updatesMade: Bool = false;
+
+            for (positionId in Iter.range(0, positionsArray.size() - 1)) {
+                let position: Position = positionsArray[positionId];
+                if (currentTime >= Option.get(position.nextRunTime, 0)) {
+                    // Call executePurchase with the correct positionId
+                    let purchaseResult = await executePurchase(user, positionId);
+                    let newNextRunTime = currentTime + _getTimestampFromFrequency(position.frequency);
+
+                    // Create a new position state
+                    let newPosition: Position = {
+                        tokenToBuy = position.tokenToBuy;
+                        tokenToSell = position.tokenToSell;
+                        amountToSell = position.amountToSell;
+                        beneficiary = position.beneficiary;
+                        frequency = position.frequency;
+                        nextRunTime = ?newNextRunTime;
+                        lastPurchaseResult = ?purchaseResult;
+                    };
+                    updatedPositions.add(newPosition);
+                    updatesMade := true;
+                };
+            };
+
+            // If any updates were made, convert array back to Buffer and update the map
+            if (updatesMade) {
+                ignore Map.put<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, user, updatedPositions);
+            };
+        };
+    };
+
+    public shared ({ caller }) func editTimer(timerId: Nat, actionType: TimerActionType) : async Result<Text, Text> {
+        if (caller != admin) {
+            return #err("Only worker can execute this method"); 
+        };
+        switch (actionType) {
+            case (#StartTimer) {
+                let timerId = await _startScheduler();
+                Debug.print("Timer: " # debug_show(timerId) # " created");
+                globalTimerId := timerId;
+                return #ok(Nat.toText(timerId));
+            };
+            case (#StopTimer) {
+                Timer.cancelTimer(timerId);
+                Debug.print("Timer: " # debug_show(timerId) # " was deleted");
+                return #ok("0");
+            };
+        };
+    };
+
+    private func _startScheduler() : async Nat {
+        Timer.recurringTimer<system>(((#nanoseconds (MINUTE * 1)), _checkAndExecutePositions));
+    };
+
+    // In order to restart timers after the canister upgrade
+    system func postupgrade() {
+        let timerId = Timer.recurringTimer<system>(((#nanoseconds (MINUTE * 1)), _checkAndExecutePositions));
+        globalTimerId := timerId;
+        Debug.print("Postupgrade Timer started: " # debug_show(timerId));
+    };
 };
