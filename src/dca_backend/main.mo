@@ -68,7 +68,7 @@ actor class DCA() = self {
     };
 
     // Set allowed worker to execute "executePurchase" method
-    let allowedWorker = Principal.fromText("ck7ps-dw2lz-7f2oo-lnkx3-mkndn-g2rva-6fxc7-ctsir-xi5vu-fuor3-fqe");
+    let admin = Principal.fromText("ck7ps-dw2lz-7f2oo-lnkx3-mkndn-g2rva-6fxc7-ctsir-xi5vu-fuor3-fqe");
 
     // // Method to create a new position
     public shared ({ caller }) func openPosition(newPosition : Position) : async Result<PositionId, Text> {
@@ -320,7 +320,7 @@ actor class DCA() = self {
 
     // only for Development
     public shared ({ caller }) func withdraw(amount : Nat, address : Principal) : async Result<Nat, L.TransferError> {
-        assert caller == Principal.fromText("hfugy-ahqdz-5sbki-vky4l-xceci-3se5z-2cb7k-jxjuq-qidax-gd53f-nqe");
+        assert caller == admin;
         await _sendIcp(address, amount, null);
     };
 
@@ -372,12 +372,12 @@ actor class DCA() = self {
 
     // only for Admin
     public shared ({ caller }) func approve(amount : Nat, to : Principal) : async Result<Nat, L.ApproveError> {
-        assert caller == Principal.fromText("hfugy-ahqdz-5sbki-vky4l-xceci-3se5z-2cb7k-jxjuq-qidax-gd53f-nqe");
+        assert caller == admin;
         await _setApprove(amount, to);
     };
 
     public shared ({ caller }) func getGlobalTimerId() : async Nat {
-        assert caller == Principal.fromText("hfugy-ahqdz-5sbki-vky4l-xceci-3se5z-2cb7k-jxjuq-qidax-gd53f-nqe");
+        assert caller == admin;
         globalTimerId;
     };
 
@@ -466,7 +466,7 @@ actor class DCA() = self {
     };
 
     public shared ({ caller }) func editTimer(timerId: Nat, actionType: TimerActionType) : async Result<Text, Text> {
-        if (caller != Principal.fromText("hfugy-ahqdz-5sbki-vky4l-xceci-3se5z-2cb7k-jxjuq-qidax-gd53f-nqe")) {
+        if (caller != admin) {
             return #err("Only worker can execute this method"); 
         };
         switch (actionType) {
