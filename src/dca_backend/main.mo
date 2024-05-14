@@ -1,29 +1,25 @@
-import HashMap "mo:base/HashMap";
-import Hash "mo:base/Hash";
+import Array "mo:base/Array";
+import Blob "mo:base/Blob";
+import Buffer "mo:base/Buffer";
+import Debug "mo:base/Debug";
+import Int "mo:base/Int";
 import Iter "mo:base/Iter";
 import Nat "mo:base/Nat";
 import Nat64 "mo:base/Nat64";
-import Principal "mo:base/Principal";
-import Text "mo:base/Text";
-import Buffer "mo:base/Buffer";
-import Types "types";
-import Result "mo:base/Result";
+import Nat8 "mo:base/Nat8";
 import Option "mo:base/Option";
-import Map "mo:map/Map";
-import { phash } "mo:map/Map";
-import Debug "mo:base/Debug";
-import Account "./Account";
+import Principal "mo:base/Principal";
+import Result "mo:base/Result";
+import Text "mo:base/Text";
 import Time "mo:base/Time";
 import Timer "mo:base/Timer";
-import Int "mo:base/Int";
-import Blob "mo:base/Blob";
-import Nat8 "mo:base/Nat8";
-import Array "mo:base/Array";
-import Error "mo:base/Error";
-import L "./Ledger";
-import S "./Sonic";
+import Map "mo:map/Map";
+import { phash } "mo:map/Map";
+import { DAY; MINUTE; WEEK } "mo:time-consts";
+
 import I "./ICSwap";
-import {MINUTE; DAY; HOUR; WEEK;} "mo:time-consts";
+import L "./Ledger";
+import Types "types";
 
 actor class DCA() = self {
     // DCA Types
@@ -70,7 +66,7 @@ actor class DCA() = self {
     // Set allowed worker to execute "executePurchase" method
     let admin = Principal.fromText("ck7ps-dw2lz-7f2oo-lnkx3-mkndn-g2rva-6fxc7-ctsir-xi5vu-fuor3-fqe");
 
-    // // Method to create a new position
+    // Method to create a new position
     public shared ({ caller }) func openPosition(newPosition : Position) : async Result<PositionId, Text> {
 
         if (newPosition.tokenToBuy != Principal.fromText("mxzaz-hqaaa-aaaar-qaada-cai")) {
@@ -181,18 +177,6 @@ actor class DCA() = self {
             };
         };
     };
-
-    // public func getBalance0(principal: Principal) : async Nat {
-    //     let result = await ICPBTCpool.getUserUnusedBalance(principal);
-    //     switch (result) {
-    //         case (#ok {balance0; balance1}) {
-    //             return balance0;
-    //         };
-    //         case (#err(_)) {
-    //             return 0;
-    //         };
-    //     };
-    // };
 
     private func _performMultiStagePurchase(position : Position) : async Result<Text, Text> {
         // Perform the multi-stage purchase
@@ -385,6 +369,17 @@ actor class DCA() = self {
         actualWorker;
     };
 
+    public func getDCAUnusedBalance(principal: Principal) : async Result<Text, Text> {
+        let result = await ICPBTCpool.getUserUnusedBalance(principal);
+        switch (result) {
+            case (#ok {balance0; balance1}) {
+                return #ok("ckBTC: " #Nat.toText(balance0) # "ICP: " #Nat.toText(balance1));
+            };
+            case (#err(_)) {
+                return #err("Error while getting balance");
+            };
+        };
+    };
 
 
     private func _setApprove(ammountToSell : Nat, to : Principal) : async Result<Nat, L.ApproveError> {
