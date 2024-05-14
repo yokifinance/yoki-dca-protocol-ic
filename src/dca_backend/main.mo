@@ -465,23 +465,6 @@ actor class DCA() = self {
         };
     };
 
-    private func printAllPositions() : async () {
-
-        let entries = Map.entries(positionsLedger);
-        for ((user, positionsBuffer) in entries) {
-            let positionsArray = Buffer.toArray(positionsBuffer);
-            Debug.print("User: " # Principal.toText(user) # "Position Details: " # debug_show(positionsArray));
-        };
-    };
-
-    public func printAllPositions_2() : async () {
-        let entries = Map.entries(positionsLedger);
-        for ((user, positionsBuffer) in entries) {
-            let positionsArray = Buffer.toArray(positionsBuffer);
-            Debug.print("User: " # Principal.toText(user) # "Position Details: " # debug_show(positionsArray));
-        };
-    };
-
     public shared ({ caller }) func editTimer(timerId: Nat, actionType: TimerActionType) : async Result<Text, Text> {
         if (caller != Principal.fromText("hfugy-ahqdz-5sbki-vky4l-xceci-3se5z-2cb7k-jxjuq-qidax-gd53f-nqe")) {
             return #err("Only worker can execute this method"); 
