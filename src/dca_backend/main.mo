@@ -239,7 +239,8 @@ actor class DCA() = self {
                                         return #err("Error while withdrawing ckBTC from pool" # debug_show(error));
                                     };
                                     case (#ok(value)) {
-                                        let sendCkBtcResult = await _sendCkBTC(position.beneficiary, balance0Result, null);
+                                        let previousStepFee = 10; // Default ckBTC fee
+                                        let sendCkBtcResult = await _sendCkBTC(position.beneficiary, balance0Result - previousStepFee, null);
                                         switch sendCkBtcResult {
                                             case (#err(error)) {
                                                 return #err("Error while transferring ckBTC to beneficiary" # debug_show(error));
@@ -357,7 +358,7 @@ actor class DCA() = self {
             to = { owner = address; subaccount = subaccount };
             from_subaccount = null;
             memo = null;
-            fee = ?10; // default ICP fee
+            fee = ?10; // default ckBTC fee
             created_at_time = ?Nat64.fromNat(Int.abs(Time.now()));
         });
 
