@@ -204,7 +204,7 @@ actor class DCA() = self {
         });
         switch transferResult {
             case (#Err(error)) {
-                return #err("Error while transferring ICP to DCA" # debug_show(error));
+                return #err("Error while transferring ICP to DCA " # debug_show(error));
             };
             case (#Ok(value)) {
                 let poolDepositResult = await ICPBTCpool.depositFrom({
@@ -214,7 +214,7 @@ actor class DCA() = self {
                 });
                 switch poolDepositResult {
                     case (#err(error)) {
-                        return #err("Error while depositing ICP to pool" # debug_show(error));
+                        return #err("Error while depositing ICP to pool " # debug_show(error));
                     };
                     case (#ok(value)) {
                         let amountOutMinimum = await _getAmountOutMinimum(position.amountToSell);
@@ -225,7 +225,7 @@ actor class DCA() = self {
                         });
                         switch swapPoolResult {
                             case (#err(error)) {
-                                return #err("Error while swaping ICP to ckBTC in ICPSwap" # debug_show(error));
+                                return #err("Error while swaping ICP to ckBTC in ICPSwap " # debug_show(error));
                             };
                             case (#ok(value)) {
                                 let balance0Result = await _getBalance0(Principal.fromActor(self));
@@ -236,14 +236,14 @@ actor class DCA() = self {
                                 });
                                 switch withdrawResult {
                                     case (#err(error)) {
-                                        return #err("Error while withdrawing ckBTC from pool" # debug_show(error));
+                                        return #err("Error while withdrawing ckBTC from pool " # debug_show(error));
                                     };
                                     case (#ok(value)) {
                                         let previousStepFee = 10; // Default ckBTC fee
                                         let sendCkBtcResult = await _sendCkBTC(position.beneficiary, balance0Result - previousStepFee, null);
                                         switch sendCkBtcResult {
                                             case (#err(error)) {
-                                                return #err("Error while transferring ckBTC to beneficiary" # debug_show(error));
+                                                return #err("Error while transferring ckBTC to beneficiary " # debug_show(error));
                                             };
                                             case (#ok(value)) {
                                                 return #ok("Position successfully executed !");
