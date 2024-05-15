@@ -5,6 +5,7 @@ import Debug "mo:base/Debug";
 import Int "mo:base/Int";
 import Iter "mo:base/Iter";
 import Nat "mo:base/Nat";
+import Float "mo:base/Float";
 import Nat64 "mo:base/Nat64";
 import Nat8 "mo:base/Nat8";
 import Option "mo:base/Option";
@@ -35,6 +36,9 @@ actor class DCA() = self {
     // Timers vars
     var globalTimerId: Nat = 0;
     var actualWorker: ?Principal = null;
+
+    // Trade vars
+    let defaultSlippageInPercent: Float = 0.5;
 
     // Create ICP Ledger actor
     let Ledger = actor ("ryjl3-tyaaa-aaaaa-aaaba-cai") : actor {
@@ -213,11 +217,11 @@ actor class DCA() = self {
                         return #err("Error while depositing ICP to pool" # debug_show(error));
                     };
                     case (#ok(value)) {
-                        // let defaultAmountOutMinimum = _getAmountOutMinimum(position.amountToSell);
+                        let amountOutMinimum = await _getAmountOutMinimum(position.amountToSell);
                         let swapPoolResult = await ICPBTCpool.swap({
                             amountIn = Nat.toText(position.amountToSell);
                             zeroForOne = false;
-                            amountOutMinimum = "0"; // YID-6 Should be calculated based on the Quoter * (% of slippage)
+                            amountOutMinimum = Int.toText(amountOutMinimum);
                         });
                         switch swapPoolResult {
                             case (#err(error)) {
@@ -299,15 +303,16 @@ actor class DCA() = self {
 
     // only for Development
 
-    public func getQuote (): async Nat{
+    private func _getAmountOutMinimum (amountIn: Nat): async Int{
         let quote = await ICPBTCpool.quote({
-            amountIn = "100_000";
+            amountIn = Nat.toText(amountIn);
             amountOutMinimum = "0";
             zeroForOne = false;
         });
         switch (quote) {
             case (#ok(value)) {
-                return value;
+                let slippage = Float.fromInt(value) * defaultSlippageInPercent / 100.0;
+                return value - Float.toInt(slippage);
             };
             case (#err(error)) {
                 return 0;
