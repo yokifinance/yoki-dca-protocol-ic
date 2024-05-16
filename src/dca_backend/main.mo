@@ -236,14 +236,15 @@ actor class DCA() = self {
                                 });
                                 switch withdrawResult {
                                     case (#err(error)) {
-                                        return #err("Error while withdrawing ckBTC from pool " # debug_show(error));
+                                        return #err("Error while withdrawing ckBTC from pool " # debug_show(error)) ;
                                     };
                                     case (#ok(value)) {
                                         let previousStepFee = 10; // Default ckBTC fee
-                                        let sendCkBtcResult = await _sendCkBTC(position.beneficiary, balance0Result - previousStepFee, null);
+                                        let amountToSend = balance0Result - previousStepFee;
+                                        let sendCkBtcResult = await _sendCkBTC(position.beneficiary, amountToSend, null);
                                         switch sendCkBtcResult {
                                             case (#err(error)) {
-                                                return #err("Error while transferring ckBTC to beneficiary " # debug_show(error));
+                                                return #err("Error while transferring ckBTC to beneficiary " # debug_show(error) # "Trying to send: " # Nat.toText(amountToSend));
                                             };
                                             case (#ok(value)) {
                                                 return #ok("Position successfully executed !");
