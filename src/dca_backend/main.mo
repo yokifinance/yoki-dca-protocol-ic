@@ -500,12 +500,12 @@ actor class DCA() = self {
     };
 
     private func _startScheduler() : async Nat {
-        Timer.recurringTimer<system>(((#nanoseconds (MINUTE * 1)), _checkAndExecutePositions));
+        Timer.recurringTimer<system>(((#nanoseconds (MINUTE * 3)), _checkAndExecutePositions));
     };
 
     // In order to restart timers after the canister upgrade
     system func postupgrade() {
-        let timerId = Timer.recurringTimer<system>(((#nanoseconds (MINUTE * 1)), _checkAndExecutePositions));
+        let timerId = Timer.recurringTimer<system>(((#nanoseconds (MINUTE * 3)), _checkAndExecutePositions));
         globalTimerId := timerId;
         Debug.print("Postupgrade Timer started: " # debug_show(timerId));
     };
