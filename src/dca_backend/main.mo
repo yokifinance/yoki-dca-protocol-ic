@@ -98,6 +98,7 @@ actor class DCA() = self {
 
         // Save the Buffer to the Map
         ignore Map.put<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, caller, currentPositions);
+        Debug.print("[INFO]: User " # debug_show(caller) # " created new position: " # debug_show(newPosition));
         #ok(currentPositions.size() - 1);
     };
 
