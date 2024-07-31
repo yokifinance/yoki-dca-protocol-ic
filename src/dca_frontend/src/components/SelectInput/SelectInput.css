@@ -1,0 +1,42 @@
+.select-input__container {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+}
+
+.select-input__label {
+    margin-bottom: 5px;
+}
+
+.select-input__controls {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    background-color: white;
+    border-radius: 5px;
+}
+
+.select-input__input {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    flex: 1 1 30%;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.select-input__text-field {
+    flex: 1 1 70%;
+}
+
+.select-input__text-field input {
+    padding: 5px;
+    border-radius: 5px;
+    border: none;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.error {
+    border: 2px solid red;
+    border-radius: 5px;
+}

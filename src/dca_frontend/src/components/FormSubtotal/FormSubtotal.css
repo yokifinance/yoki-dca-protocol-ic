@@ -1,0 +1,29 @@
+.form-subtotal {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    border: 1px solid white;
+    border-radius: 5px;
+    background-color: rgb(44, 140, 220);
+}
+
+.form-subtotal__title {
+    margin: 10px 0 5px;
+    padding: 0 0 10px 5px;
+    font-size: 18px;
+    border-bottom: 1px solid white;
+}
+
+.form-subtotal__list {
+    margin: 0;
+    padding: 0 20px 10px 5px;
+    list-style: none;
+    border-bottom: 1px solid white;
+}
+
+.form-subtotal__element {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}

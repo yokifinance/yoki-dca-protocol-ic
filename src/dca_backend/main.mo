@@ -98,7 +98,6 @@ actor class DCA() = self {
 
         // Save the Buffer to the Map
         ignore Map.put<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, caller, currentPositions);
-        Debug.print("[INFO]: User " # debug_show(caller) # " created new position: " # debug_show(newPosition));
         #ok(currentPositions.size() - 1);
     };
 
@@ -143,7 +142,6 @@ actor class DCA() = self {
                     };
                     case (?position) {
                         ignore positions.remove(index);
-                        Debug.print("[INFO]: User " # debug_show(caller) # " deleted position: " # debug_show(position));
                         return #ok("Position deleted");
                     };
                 };
@@ -168,7 +166,6 @@ actor class DCA() = self {
                     case (?position) {
                         // Perform the multi-stage purchase
                         let purchaseResult = await _performMultiStagePurchase(position);
-                        Debug.print("[INFO]: User " # debug_show(principal) # " executed position with result: " # debug_show(purchaseResult));
                         return purchaseResult;
                     };
                 };

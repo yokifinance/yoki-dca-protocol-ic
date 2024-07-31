@@ -1,0 +1,12 @@
+.page {
+    margin: 0 auto;
+    padding: 0;
+    font-family: "Arial", sans-serif;
+    font-weight: 400;
+    background: rgb(0, 212, 255);
+    background: linear-gradient(54deg, rgba(0, 212, 255, 0.30438112745098034) 24%, rgba(243, 245, 255, 1) 100%);
+    width: 100%;
+    min-width: 320px;
+    display: flex;
+    flex-direction: column;
+}
