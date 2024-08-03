@@ -322,6 +322,10 @@ actor class DCA() = self {
         };
     };
 
+    public shared query (msg) func whoami() : async Principal {
+        msg.caller
+    };
+
     public shared ({ caller }) func withdraw(amount : Nat, address : Principal) : async Result<Nat, L.TransferError> {
         assert caller == admin;
         await _sendIcp(address, amount, null);
