@@ -20,13 +20,10 @@ module.exports = {
                 exclude: /node_modules/,
             },
             {
-                test: /\.jsx?$/,
+                test: /\.(js|jsx)$/,
                 exclude: /node_modules/,
                 use: {
                     loader: "babel-loader",
-                    options: {
-                        presets: ["@babel/preset-env", "@babel/preset-react", "@babel/preset-typescript"],
-                    },
                 },
             },
             {
@@ -50,6 +47,19 @@ module.exports = {
                 enforce: "pre",
                 test: /\.js$/,
                 loader: "source-map-loader",
+            },
+            {
+                enforce: "pre",
+                test: /\.js$/,
+                loader: "source-map-loader",
+                options: {
+                    filterSourceMappingUrl: (url, resourcePath) => {
+                        if (/node_modules\/simple-cbor/.test(resourcePath)) {
+                            return false;
+                        }
+                        return true;
+                    },
+                },
             },
         ],
     },
