@@ -6,11 +6,19 @@
         },
         "dca_frontend": {
             "source": ["src/dca_frontend/dist"],
-            "type": "assets"
+            "type": "assets",
+            "dependencies": ["dca_backend"]
         },
-        "dca_identity": {
-            "main": "src/dca_backend/identityInit.mo",
-            "type": "motoko"
+        "internet_identity": {
+            "candid": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity.did",
+            "frontend": {},
+            "remote": {
+                "id": {
+                    "ic": "rdmx6-jaaaa-aaaaa-aaadq-cai"
+                }
+            },
+            "type": "custom",
+            "wasm": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity_dev.wasm.gz"
         },
         "icp_ledger_canister": {
             "type": "custom",
