@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import ConnectWalletButton from "../ConnectWalletButton/ConnectWalletButton";
 import "./FormNavigation.css";
 
 interface FormNavigationProps {
@@ -27,7 +28,7 @@ const FormNavigation: React.FC<FormNavigationProps> = ({ activeFormNavigationBut
                     <a className="form-navigation__link">Portfolio</a>
                 </li>
             </ul>
-            <button className="form-navigation__button">Connect wallet</button>
+            <ConnectWalletButton />
         </div>
     );
 };

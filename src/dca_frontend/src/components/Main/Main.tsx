@@ -26,7 +26,6 @@ const Main: React.FC = () => {
         const handleEsc = (event: KeyboardEvent) => {
             if (event.key === "Escape") {
                 setShowSubscriptionDetails(false);
-                setActiveFormNavigationButton(1);
             }
         };
         window.addEventListener("keydown", handleEsc);

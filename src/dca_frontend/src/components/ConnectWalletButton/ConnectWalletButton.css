@@ -1,0 +1,17 @@
+.connect-wallet-button {
+    margin: 0 0 18px;
+    background-color: #20b8be;
+    border: none;
+    border-radius: 15px;
+    color: white;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease; /* Плавный переход цвета фона в течение 0.3 секунд */
+}
+
+.connect-wallet-button:hover {
+    background-color: #20b9be8b;
+}
+
+.connect-wallet-button:active {
+    background-color: rgba(76, 195, 76, 0.712);
+}

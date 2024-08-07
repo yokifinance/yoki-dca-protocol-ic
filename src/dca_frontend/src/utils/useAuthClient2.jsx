@@ -83,7 +83,7 @@ export const useAuthClient = (options = defaultOptions) => {
         setAuthClient(client);
         // Using the identity obtained from the auth client, we can create an agent to interact with the IC.
 
-        const agent = new HttpAgent({ identity, host: "http://127.0.0.1:4943" });
+        const agent = new HttpAgent({ host: "http://127.0.0.1:4943" }, identity);
 
         const actor = Actor.createActor(webapp_idl, {
             agent,

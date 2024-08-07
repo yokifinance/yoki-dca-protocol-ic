@@ -16,6 +16,7 @@
     "@dfinity/auth-client": "^2.0.0",
     "@dfinity/candid": "^2.0.0",
     "@dfinity/principal": "^2.0.0",
+    "@psychedelic/plug-connect": "^0.2.0",
     "date-fns": "^3.6.0",
     "dotenv": "^16.4.5",
     "dotenv-webpack": "^8.1.0",

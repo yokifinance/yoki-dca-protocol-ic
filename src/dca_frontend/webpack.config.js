@@ -32,34 +32,15 @@ module.exports = {
                 exclude: /node_modules/,
             },
             {
-                test: /\.svg$/,
+                test: /\.(png|jpe?g|gif|svg)$/i,
                 use: [
                     {
                         loader: "file-loader",
                         options: {
-                            name: "[name].[ext]",
-                            outputPath: "images/",
+                            name: "[path][name].[ext]",
                         },
                     },
                 ],
-            },
-            {
-                enforce: "pre",
-                test: /\.js$/,
-                loader: "source-map-loader",
-            },
-            {
-                enforce: "pre",
-                test: /\.js$/,
-                loader: "source-map-loader",
-                options: {
-                    filterSourceMappingUrl: (url, resourcePath) => {
-                        if (/node_modules\/simple-cbor/.test(resourcePath)) {
-                            return false;
-                        }
-                        return true;
-                    },
-                },
             },
         ],
     },

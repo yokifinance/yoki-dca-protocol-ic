@@ -1,0 +1,8 @@
+{
+    "tokenToBuy": "string",
+    "tokenToSell": "string",
+    "amount": "float number",
+    "cycle": "number(hours)",
+    "endDate": "date",
+    "description": "после сабмита откроется попап -> финализирующая инфа, кнопка createPosition -> идем в бек, оттуда вызываем метод createPosition"
+}
