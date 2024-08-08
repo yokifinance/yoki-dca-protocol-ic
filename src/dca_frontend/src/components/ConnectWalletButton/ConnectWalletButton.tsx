@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import "./ConnectWalletButton.css";
 import AuthModal from "../AuthModal/AuthModal";
-import { InternetIdentityButton, PlugButton } from "../AuthModalButtons/AuthModalButtons";
+import AuthModalButtons from "../AuthModalButtons/AuthModalButtons";
 
 const ConnectWalletButton: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -21,8 +21,7 @@ const ConnectWalletButton: React.FC = () => {
                 Connect Wallet
             </button>
             <AuthModal isOpen={isModalOpen} onClose={handleCloseModal}>
-                <InternetIdentityButton />
-                <PlugButton />
+                <AuthModalButtons />
             </AuthModal>
         </div>
     );

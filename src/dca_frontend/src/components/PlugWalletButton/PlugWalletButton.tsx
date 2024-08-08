@@ -1,7 +1,6 @@
 import "./PlugWalletButton.css";
 import React, { useEffect, useState } from "react";
 import PlugConnect from "@psychedelic/plug-connect";
-import { IDL } from "@dfinity/candid";
 import { AuthClient } from "@dfinity/auth-client";
 import { Actor, HttpAgent } from "@dfinity/agent";
 import { idlFactory } from "../../../declarations/dca_backend/dca_backend.did.js";
@@ -18,6 +17,7 @@ const PlugWalletButton: React.FC = () => {
     const [actor, setActor] = useState<any>(null);
     const [identityProvider, setIdentityProvider] = useState<string>("");
     const [authClient, setAuthClient] = useState<AuthClient | undefined>(undefined);
+    const [walletProvider, setWalleetProvider] = useState<string | undefined>(undefined);
 
     useEffect(() => {
         console.log(identityProvider);
@@ -74,8 +74,25 @@ const PlugWalletButton: React.FC = () => {
         }
     };
 
+    const handleInternetIdentityAuth = async () => {
+        try {
+            let authClient = await AuthClient.create();
+            getIdentityProvider();
+            await new Promise((resolve, reject) => {
+                authClient.login({
+                    identityProvider: identityProvider,
+                    onSuccess: () => {
+                        setActorAfterLogin(authClient);
+                    },
+                    onError: reject,
+                });
+            });
+        } catch (error) {
+            console.error("Login to Internet Identity failed:", error);
+        }
+    };
+
     const getIdentityProvider = () => {
-        let idpProvider;
         if (typeof window !== "undefined") {
             const isLocal = process.env.DFX_NETWORK !== "ic";
             const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
@@ -85,7 +102,6 @@ const PlugWalletButton: React.FC = () => {
                 setIdentityProvider(`http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943`);
             }
         }
-        return idpProvider;
     };
 
     const setActorAfterLogin = async (authClient: AuthClient) => {
@@ -99,26 +115,10 @@ const PlugWalletButton: React.FC = () => {
         setActor(whoamiActor);
     };
 
-    const handleInternetIdentityConnect = async () => {
-        let authClient = await AuthClient.create();
-        getIdentityProvider();
-        await new Promise((resolve, reject) => {
-            authClient.login({
-                identityProvider: identityProvider,
-                onSuccess: () => {
-                    setActorAfterLogin(authClient);
-                    // handleWhoAmI();
-                    // resolve();
-                },
-                onError: reject,
-            });
-        });
-    };
-
     return (
         <div>
             <PlugConnect whitelist={canisterIds} onConnectCallback={handlePlugConnect} />
-            <button onClick={handleInternetIdentityConnect}>Connect with II</button>
+            <button onClick={handleInternetIdentityAuth}>Connect with II</button>
             <button onClick={handleWhoAmIClick}>Who am I</button>
             <input className="tst" type="text" id="whoami" readOnly value={result} placeholder="your Identity" />
         </div>
