@@ -29,6 +29,7 @@ const FormSubtotal: React.FC<FormSubtotalProps> = ({ buyOption, sellOption, freq
                     <span>{endDate}</span>
                 </li>
             </ul>
+            <div>Total Amount: {"totalAmount"}</div>
         </div>
     );
 };

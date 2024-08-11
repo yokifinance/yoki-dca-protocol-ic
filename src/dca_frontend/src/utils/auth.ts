@@ -1,18 +1,26 @@
-import PlugConnect from "@psychedelic/plug-connect";
 import { AuthClient } from "@dfinity/auth-client";
-import { Actor, HttpAgent } from "@dfinity/agent";
-import { idlFactory } from "../../declarations/dca_backend/dca_backend.did.js";
+import { Actor, HttpAgent, Identity } from "@dfinity/agent";
 import { IDL } from "@dfinity/candid";
 
 //PlugWallet Auth
 
-export const handlePlugConnect = async (): Promise<string | undefined> => {
+export const handlePlugConnect = async (whitelist: string[]): Promise<boolean | undefined> => {
     try {
-        const publicKey = await window.ic.plug.requestConnect();
-        console.log(`The connected user's public key is:`, publicKey);
-        const principalId = await window.ic.plug.agent.getPrincipal();
-        console.log(principalId);
-        return principalId.toText();
+        if (window.ic && window.ic.plug) {
+            const publicKey = await window.ic.plug.requestConnect({
+                whitelist,
+            });
+            console.log(`The connected user's public key is:`, publicKey);
+
+            const principalId = await window.ic.plug.agent.getPrincipal();
+            console.log(principalId);
+            if (await checkIsPlugConnected()) {
+                return true;
+            }
+        } else {
+            console.log("Plug wallet is not available");
+            return undefined;
+        }
     } catch (e) {
         console.log(e);
         return undefined;
@@ -28,6 +36,7 @@ export const checkIsPlugConnected = async (): Promise<boolean> => {
 export const disconnectPlug = async (): Promise<void> => {
     try {
         await window.ic.plug.disconnect();
+        await checkIsPlugConnected();
     } catch (error) {
         console.log(error);
     }
@@ -51,13 +60,14 @@ export const getIdentityProvider = (): string | undefined => {
             return `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943`;
         }
     }
-    return undefined; // Return undefined if none of the conditions are met
+    return undefined;
 };
 
 export const handleInternetIdentityAuth = async (): Promise<AuthClient | void> => {
     try {
         const authClient = await AuthClient.create();
-        const identityProvider = getIdentityProvider(); // Make sure this function is defined
+        const identityProvider = getIdentityProvider();
+        console.log(identityProvider); // Make sure this function is defined
 
         await new Promise<void>((resolve, reject) => {
             authClient.login({
@@ -69,15 +79,14 @@ export const handleInternetIdentityAuth = async (): Promise<AuthClient | void> =
             });
         });
 
-        return authClient; // Return the authClient on successful login
+        return authClient;
     } catch (error) {
         console.error("Login to Internet Identity failed:", error);
         return undefined;
     }
 };
 
-export const createActor = async (client: AuthClient, canisterId: string, idlFactory: IDL.InterfaceFactory) => {
-    const identity = client.getIdentity();
+export const createActor = async (canisterId: string, idlFactory: IDL.InterfaceFactory, identity: Identity) => {
     const agent = new HttpAgent({ identity, host: "http://127.0.0.1:4943" });
 
     const actor = Actor.createActor(idlFactory, {
@@ -88,57 +97,20 @@ export const createActor = async (client: AuthClient, canisterId: string, idlFac
     return actor;
 };
 
-export const checkIsInternetIdentityConected = async (client: AuthClient) => {
-    const isAuthenticated = await client.isAuthenticated();
-    console.log(isAuthenticated);
+export const checkIsInternetIdentityConnected = async (
+    client: AuthClient | undefined
+): Promise<boolean | undefined> => {
+    if (client) {
+        const isAuthenticated = await client.isAuthenticated();
+        console.log(isAuthenticated);
+        return isAuthenticated;
+    } else {
+        console.warn("Internet Identity is unavialable");
+        return undefined;
+    }
 };
 
-// const createActor
-
-// async function updateClient1(client) {
-//     const isAuthenticated = await client.isAuthenticated();
-//     // setIsAuthenticated(isAuthenticated);
-
-//     const identity = client.getIdentity();
-//     // setIdentity(identity);
-
-//     const principal = identity.getPrincipal();
-//     // setPrincipal(principal);
-
-//     // setAuthClient(client);
-//     // Using the identity obtained from the auth client, we can create an agent to interact with the IC.
-
-//     const agent = new HttpAgent({ identity, host: "http://127.0.0.1:4943" });
-
-//     const actor = Actor.createActor(webapp_idl, {
-//         agent,
-//         canisterId: canisterId,
-//     });
-//     await agent.fetchRootKey();
-//     // setWhoamiActor(actor);
-// }
-
-//Plug & Internet Identity
-
-// async function updateClient(client) {
-//     const isAuthenticated = await client.isAuthenticated();
-//     setIsAuthenticated(isAuthenticated);
-
-//     const identity = client.getIdentity();
-//     setIdentity(identity);
-
-//     const principal = identity.getPrincipal();
-//     setPrincipal(principal);
-
-//     setAuthClient(client);
-//     // Using the identity obtained from the auth client, we can create an agent to interact with the IC.
-
-//     const agent = new HttpAgent({ identity, host: "http://127.0.0.1:4943" });
-
-//     const actor = Actor.createActor(webapp_idl, {
-//         agent,
-//         canisterId: canisterId,
-//     });
-//     await agent.fetchRootKey();
-//     setWhoamiActor(actor);
-// }
+export const disconnectInternetIdentity = async (client: AuthClient) => {
+    console.log(`Client? ${client}`);
+    await client.logout();
+};

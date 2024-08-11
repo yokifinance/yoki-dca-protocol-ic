@@ -1,4 +1,4 @@
-import React from "react";
+import React, { ReactHTMLElement, useRef } from "react";
 import "./Form.css";
 import FormSubtotal from "../FormSubtotal/FormSubtotal";
 import RadioButtons from "../RadioButtons/RadioButtons";
@@ -6,11 +6,18 @@ import SelectInput from "../SelectInput/SelectInput";
 import DatePicker from "../DatePicker/DatePicker";
 import SubmitButton from "../SubmitButton/SubmitButton";
 import { FormErrors } from "../../utils/validation";
+import { useAuth } from "../../context/AuthContext";
+import ConnectWalletButton from "../ConnectWalletButton/ConnectWalletButton";
 
 interface FormProps {
+    NEWtokenToBuy: React.RefObject<HTMLInputElement>;
+    NEWtokenToSell: React.RefObject<HTMLInputElement>;
+    NEWfrequency: React.RefObject<HTMLInputElement>;
+    NEWnextRunTime: React.RefObject<HTMLInputElement>;
+    NEWamountToSell: React.RefObject<HTMLInputElement>;
     buyOption: string;
     sellOption: string;
-    frequency: string;
+    frequency1: string;
     endDate: string;
     amount: number;
     isWalletConnected: boolean;
@@ -28,7 +35,7 @@ interface FormProps {
 const Form: React.FC<FormProps> = ({
     buyOption,
     sellOption,
-    frequency,
+    frequency1,
     endDate,
     amount,
     isWalletConnected,
@@ -41,7 +48,27 @@ const Form: React.FC<FormProps> = ({
     onAmountChange,
     onSubmit,
     totalAmount,
+    NEWtokenToBuy,
+    NEWtokenToSell,
+    NEWfrequency,
+    NEWnextRunTime,
+    NEWamountToSell,
 }) => {
+    const {
+        authClient,
+        isConnected,
+        identity,
+        principal,
+        actor,
+        whitelist,
+        setAuthClient,
+        setIsConnected,
+        setIdentity,
+        setPrincipal,
+        setActor,
+        setWhitelist,
+    } = useAuth(); // Use the AuthContext
+
     return (
         <>
             <form onSubmit={onSubmit} className="form">
@@ -71,25 +98,21 @@ const Form: React.FC<FormProps> = ({
                     />
                 </SelectInput>
                 <RadioButtons
-                    frequency={frequency}
+                    frequency={frequency1}
                     setFrequency={onFrequencyChange}
                     hasError={isSubmitted && !!errors.frequency}
                 />
                 <DatePicker endDate={endDate} setEndDate={onEndDateChange} hasError={isSubmitted && !!errors.endDate} />
-                <FormSubtotal
-                    buyOption={buyOption}
-                    sellOption={sellOption}
-                    frequency={frequency}
-                    endDate={endDate}
-                    amount={amount}
-                />
-                <div>Total Amount: {totalAmount}</div>
-                <SubmitButton
-                    label="Submit"
-                    isWalletConnected={isWalletConnected}
-                    onSubmit={onSubmit}
-                    errors={errors}
-                />
+                {isConnected ? (
+                    <SubmitButton
+                        label="Submit"
+                        isWalletConnected={isWalletConnected}
+                        onSubmit={onSubmit}
+                        errors={errors}
+                    />
+                ) : (
+                    <ConnectWalletButton />
+                )}
             </form>
         </>
     );
