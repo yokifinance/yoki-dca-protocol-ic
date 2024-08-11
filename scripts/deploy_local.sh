@@ -73,7 +73,3 @@ record {
      };
  }
 })"
-
-# Deploy all other canisters from the project
-dfx identity use $DEFAULT_IDENTITY
-dfx deploy
