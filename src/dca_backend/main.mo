@@ -396,7 +396,7 @@ actor class DCA() = self {
         let result = await ICPBTCpool.getUserUnusedBalance(principal);
         switch (result) {
             case (#ok {balance0; balance1}) {
-                return #ok("ckBTC: " #Nat.toText(balance0) # "ICP: " #Nat.toText(balance1));
+                return #ok("ckBTC: " #Nat.toText(balance0) # " ICP: " #Nat.toText(balance1));
             };
             case (#err(_)) {
                 return #err("Error while getting balance");
