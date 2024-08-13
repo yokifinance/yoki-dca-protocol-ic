@@ -17,7 +17,7 @@ const ConnectWalletButton: React.FC = () => {
 
     return (
         <div>
-            <button className="connect-wallet-button" onClick={handleButtonClick}>
+            <button type="button" className="connect-wallet-button" onClick={handleButtonClick}>
                 Connect Wallet
             </button>
             <AuthModal isOpen={isModalOpen} onClose={handleCloseModal}>

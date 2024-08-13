@@ -26,30 +26,6 @@ const Main: React.FC = () => {
     //refactoring
     //refactoring
 
-    const [NEWisFormValid, NEWsetIsFormValid] = useState<boolean>(true);
-
-    const NEWtokenToBuy = useRef<HTMLInputElement>(null);
-    const NEWtokenToSell = useRef<HTMLInputElement>(null);
-    const NEWfrequency = useRef<HTMLInputElement>(null);
-    const NEWnextRunTime = useRef<HTMLInputElement>(null);
-    const NEWamountToSell = useRef<HTMLInputElement>(null);
-
-    const NEWhandelSubmitForm = (e: React.FormEvent) => {
-        e.preventDefault();
-
-        if (NEWisFormValid) {
-            const submittedData = {
-                tokenToBuy: NEWtokenToBuy.current?.value || "",
-                tokenToSell: NEWtokenToSell.current?.value || "",
-                frequency: NEWfrequency.current?.value || "",
-                nextRunTime: NEWnextRunTime.current?.value || "",
-                amountToSell: NEWamountToSell.current?.value || "",
-            };
-
-            console.log(JSON.stringify(submittedData, null, 2));
-        }
-    };
-
     //refactoring
     //refactoring
     //refactoring
@@ -94,28 +70,7 @@ const Main: React.FC = () => {
                             onFormNavigationClick={setActiveFormNavigationButton}
                         />
                         {activeFormNavigationButton === 0 ? (
-                            <Form
-                                NEWtokenToBuy={NEWtokenToBuy}
-                                NEWtokenToSell={NEWtokenToSell}
-                                NEWfrequency={NEWfrequency}
-                                NEWnextRunTime={NEWnextRunTime}
-                                NEWamountToSell={NEWamountToSell}
-                                buyOption={buyOption}
-                                sellOption={sellOption}
-                                frequency1={frequency1}
-                                endDate={endDate}
-                                amount={amount}
-                                isWalletConnected={isWalletConnected}
-                                errors={errors}
-                                isSubmitted={isSubmitted}
-                                onBuyOptionChange={setBuyOption}
-                                onSellOptionChange={setSellOption}
-                                onFrequencyChange={setFrequency}
-                                onEndDateChange={setEndDate}
-                                onAmountChange={setAmount}
-                                onSubmit={handleSubmit}
-                                totalAmount={totalAmount}
-                            />
+                            <Form isWalletConnected={isWalletConnected} />
                         ) : (
                             <Portfolio onDetailsClick={() => setShowSubscriptionDetails(true)} />
                         )}

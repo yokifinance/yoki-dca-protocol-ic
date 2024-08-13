@@ -5,6 +5,7 @@ import { handleInternetIdentityAuth, createActor, disconnectInternetIdentity } f
 import { useAuth } from "../../context/AuthContext";
 import { Principal } from "@dfinity/principal"; // Import Principal
 import { idlFactory } from "../../../declarations/dca_backend/dca_backend.did.js";
+import { idlFactory as legger } from "../../../declarations/icp_ledger_canister/icp_ledger_canister.did.js";
 
 const AuthModalButtons: React.FC = () => {
     const {
@@ -39,7 +40,7 @@ const AuthModalButtons: React.FC = () => {
                 setIsConnected(true);
                 setAuthClient(client);
                 const identity = client.getIdentity();
-                const actor = await createActor(whitelist[1], idlFactory, identity); // Pass all required arguments
+                const actor = await createActor(whitelist[2], legger, identity); // Pass all required arguments
 
                 setActor(actor);
                 setPrincipal(identity.getPrincipal());
@@ -73,10 +74,13 @@ const AuthModalButtons: React.FC = () => {
         };
 
         try {
-            const op = await actor.openPosition(position);
-            console.log(op);
-            let result = await actor.whoami();
-            console.log(result);
+            // const op = await actor.openPosition(position);
+            // console.log(op);
+            // let result = await actor.whoami();
+            // console.log(result);
+            let lol = Principal.fromText("klcto-2xe2e-hjit4-wphri-c3ify-wgrjd-jc5c2-pbvjd-gpwdx-ib2ra-hae");
+            const res = await actor.icrc1_balance_of({ owner: lol, subaccount: [] });
+            console.log(res);
         } catch (error) {
             console.log(error);
         }

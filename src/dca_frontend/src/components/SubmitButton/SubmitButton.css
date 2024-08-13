@@ -1,7 +1,7 @@
 .submit-button {
     background-color: #20b8be; /* Цвет кнопки в активном состоянии */
     border: none;
-    border-radius: 4px;
+    border-radius: 5px;
     color: white;
     padding: 10px 20px;
     font-size: 16px;

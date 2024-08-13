@@ -1,120 +1,110 @@
-import React, { ReactHTMLElement, useRef } from "react";
+import React, { useRef, useState, useCallback } from "react";
 import "./Form.css";
-import FormSubtotal from "../FormSubtotal/FormSubtotal";
-import RadioButtons from "../RadioButtons/RadioButtons";
-import SelectInput from "../SelectInput/SelectInput";
-import DatePicker from "../DatePicker/DatePicker";
 import SubmitButton from "../SubmitButton/SubmitButton";
-import { FormErrors } from "../../utils/validation";
-import { useAuth } from "../../context/AuthContext";
 import ConnectWalletButton from "../ConnectWalletButton/ConnectWalletButton";
+import { useAuth } from "../../context/AuthContext";
+import { useCalculateTotalAmount } from "../../utils/useCalculateTotalAmount";
+import RadioButtons from "../RadioButtons/RadioButtons";
 
 interface FormProps {
-    NEWtokenToBuy: React.RefObject<HTMLInputElement>;
-    NEWtokenToSell: React.RefObject<HTMLInputElement>;
-    NEWfrequency: React.RefObject<HTMLInputElement>;
-    NEWnextRunTime: React.RefObject<HTMLInputElement>;
-    NEWamountToSell: React.RefObject<HTMLInputElement>;
-    buyOption: string;
-    sellOption: string;
-    frequency1: string;
-    endDate: string;
-    amount: number;
     isWalletConnected: boolean;
-    errors: FormErrors;
-    isSubmitted: boolean;
-    onBuyOptionChange: (value: string) => void;
-    onSellOptionChange: (value: string) => void;
-    onFrequencyChange: (value: string) => void;
-    onEndDateChange: (value: string) => void;
-    onAmountChange: (value: number) => void;
-    onSubmit: (e: React.FormEvent) => void;
-    totalAmount: number;
 }
 
-const Form: React.FC<FormProps> = ({
-    buyOption,
-    sellOption,
-    frequency1,
-    endDate,
-    amount,
-    isWalletConnected,
-    errors,
-    isSubmitted,
-    onBuyOptionChange,
-    onSellOptionChange,
-    onFrequencyChange,
-    onEndDateChange,
-    onAmountChange,
-    onSubmit,
-    totalAmount,
-    NEWtokenToBuy,
-    NEWtokenToSell,
-    NEWfrequency,
-    NEWnextRunTime,
-    NEWamountToSell,
-}) => {
-    const {
-        authClient,
-        isConnected,
-        identity,
-        principal,
-        actor,
-        whitelist,
-        setAuthClient,
-        setIsConnected,
-        setIdentity,
-        setPrincipal,
-        setActor,
-        setWhitelist,
-    } = useAuth(); // Use the AuthContext
+const Form: React.FC<FormProps> = ({ isWalletConnected }) => {
+    const { isConnected } = useAuth();
+
+    const [endDate, setEndDate] = useState<string>("");
+
+    const NEWtokenToBuy = useRef<HTMLSelectElement>(null);
+    const NEWtokenToSell = useRef<HTMLSelectElement>(null);
+    const NEWamountToSell = useRef<HTMLInputElement>(null);
+    const radioButtonsRef = useRef<{ getFrequency: () => string }>(null);
+
+    const totalAmount = useCalculateTotalAmount(
+        NEWamountToSell.current?.valueAsNumber || 0,
+        radioButtonsRef.current?.getFrequency() || "",
+        endDate
+    );
+
+    console.log("form");
+
+    const handleSubmitForm = (e: React.FormEvent) => {
+        e.preventDefault();
+        const submittedData = {
+            tokenToBuy: NEWtokenToBuy.current?.value || "",
+            tokenToSell: NEWtokenToSell.current?.value || "",
+            frequency: radioButtonsRef.current?.getFrequency() || "",
+            amountToSell: NEWamountToSell.current?.value || "",
+        };
+        console.log(JSON.stringify(submittedData, null, 2));
+    };
 
     return (
-        <>
-            <form onSubmit={onSubmit} className="form">
-                <SelectInput
-                    label="You buy:"
-                    id="buy"
-                    value={buyOption}
-                    options={["BTC", "ETH", "TON"]}
-                    onChange={onBuyOptionChange}
-                    hasError={isSubmitted && !!errors.buyOption}
-                />
-                <SelectInput
-                    label="You sell:"
-                    id="sell"
-                    value={sellOption}
-                    options={["USD", "GEL", "RUB"]}
-                    onChange={onSellOptionChange}
-                    hasError={isSubmitted && !!errors.sellOption}
-                >
+        <form className="form" onSubmit={handleSubmitForm}>
+            <div className="select-input__container">
+                <label htmlFor="buy" className="select-input__label">
+                    You buy:
+                </label>
+                <select id="buy" className="select-input__input" ref={NEWtokenToBuy}>
+                    <option value="" disabled>
+                        Select token
+                    </option>
+                    {["BTC", "ETH", "TON"].map((option) => (
+                        <option key={option} value={option}>
+                            {option}
+                        </option>
+                    ))}
+                </select>
+            </div>
+
+            <div className="select-input__container select-input__container_last">
+                <label htmlFor="sell" className="select-input__label">
+                    You sell:
+                </label>
+                <div className="select-input__controls">
+                    <select id="sell" className="select-input__input" ref={NEWtokenToSell}>
+                        <option value="" disabled>
+                            Select token
+                        </option>
+                        {["USD", "GEL", "RUB"].map((option) => (
+                            <option key={option} value={option}>
+                                {option}
+                            </option>
+                        ))}
+                    </select>
                     <input
+                        className="select-input__text-field"
                         type="number"
                         min={0}
-                        value={amount}
-                        onChange={(e) => onAmountChange(parseFloat(e.target.value))}
+                        ref={NEWamountToSell}
                         placeholder="Amount"
-                        className={isSubmitted && errors.amount ? "error" : ""}
                     />
-                </SelectInput>
-                <RadioButtons
-                    frequency={frequency1}
-                    setFrequency={onFrequencyChange}
-                    hasError={isSubmitted && !!errors.frequency}
+                </div>
+            </div>
+
+            <RadioButtons ref={radioButtonsRef} onDataChange={() => {}} />
+
+            <div className="date-picker">
+                <label htmlFor="endDate" className="date-picker__label">
+                    End date:
+                </label>
+                <input
+                    className="date-picker__input"
+                    type="date"
+                    id="endDate"
+                    value={endDate}
+                    min={new Date().toISOString().split("T")[0]}
+                    onChange={(e) => setEndDate(e.target.value)}
                 />
-                <DatePicker endDate={endDate} setEndDate={onEndDateChange} hasError={isSubmitted && !!errors.endDate} />
-                {isConnected ? (
-                    <SubmitButton
-                        label="Submit"
-                        isWalletConnected={isWalletConnected}
-                        onSubmit={onSubmit}
-                        errors={errors}
-                    />
-                ) : (
-                    <ConnectWalletButton />
-                )}
-            </form>
-        </>
+            </div>
+            {/* <SubmitButton label="Submit" isWalletConnected={isWalletConnected} /> */}
+
+            {isConnected ? (
+                <SubmitButton label="Submit" isWalletConnected={isWalletConnected} />
+            ) : (
+                <ConnectWalletButton />
+            )}
+        </form>
     );
 };
 

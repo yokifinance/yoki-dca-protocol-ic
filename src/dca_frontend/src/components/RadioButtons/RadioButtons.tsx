@@ -1,19 +1,31 @@
-import React from "react";
+import React, { useImperativeHandle, useState, forwardRef } from "react";
 import "./RadioButtons.css";
 
 interface RadioButtonsProps {
-    frequency: string;
-    hasError: boolean;
-    setFrequency: (value: string) => void;
+    onDataChange: (data: string) => void;
 }
 
-const RadioButtons: React.FC<RadioButtonsProps> = ({ frequency, setFrequency, hasError }) => {
-    const options = ["1 day", "1 week", "2 weeks", "4 weeks", "1 hour", "4 hours", "8 hours", "12 hours"];
+const RadioButtons = forwardRef((props: RadioButtonsProps, ref) => {
+    const [frequency, setFrequency] = useState<string>("");
+
+    useImperativeHandle(ref, () => ({
+        getFrequency: () => frequency,
+    }));
+
+    console.log("rb");
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newFrequency = e.target.value;
+        setFrequency(newFrequency);
+        props.onDataChange(newFrequency); // Вызываем onDataChange при изменении
+    };
+
+    const options = ["1 day", "1 week", "2 weeks"];
 
     return (
         <>
-            <span className="radio-button-title">Recurring Cycle</span>
-            <div className={`radio-button-container ${hasError ? "error" : ""}`}>
+            <span className="radio-button-title">Recurring Cycle:</span>
+            <div className="radio-button-container">
                 {options.map((option, index) => (
                     <div className="radio-button" key={option}>
                         <input
@@ -22,7 +34,7 @@ const RadioButtons: React.FC<RadioButtonsProps> = ({ frequency, setFrequency, ha
                             name="frequency"
                             value={option}
                             checked={frequency === option}
-                            onChange={(e) => setFrequency(e.target.value)}
+                            onChange={handleInputChange}
                         />
                         <label className="radio-button__label" htmlFor={`radio-${index}`}>
                             {option}
@@ -32,6 +44,6 @@ const RadioButtons: React.FC<RadioButtonsProps> = ({ frequency, setFrequency, ha
             </div>
         </>
     );
-};
+});
 
 export default RadioButtons;

@@ -4,17 +4,15 @@ import "./SubmitButton.css";
 interface SubmitButtonProps {
     label: string;
     isWalletConnected: boolean;
-    errors: object;
-    onSubmit: (e: React.FormEvent) => void;
 }
 
-const SubmitButton: React.FC<SubmitButtonProps> = ({ label, isWalletConnected, onSubmit, errors }) => {
+const SubmitButton: React.FC<SubmitButtonProps> = ({ label, isWalletConnected }) => {
     return (
         <button
             className="submit-button"
             type="submit"
-            disabled={isWalletConnected || Object.keys(errors).length > 0}
-            onClick={onSubmit}
+            // disabled={isWalletConnected || Object.keys(errors).length > 0}
+            onClick={() => console.log("здарова")}
         >
             {label}
         </button>
