@@ -14,6 +14,7 @@ module {
         tokenToBuy : Principal;
         tokenToSell : Principal;
         frequency : Frequency;
+        purchasesLeft : Int;
         nextRunTime: ?Time.Time;
         lastPurchaseResult: ?Result.Result<Text, Text>;
     };

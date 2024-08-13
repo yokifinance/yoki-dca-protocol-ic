@@ -453,6 +453,7 @@ actor class DCA() = self {
     private func _checkAndExecutePositions() : async () {
         let currentTime = Time.now();
         let entries = Map.entries(positionsLedger);
+        Debug.print("[INFO] Heartbeat - checking positions");
         for ((user, positionsBuffer) in entries) {
             let positionsArray = Buffer.toArray(positionsBuffer);
             let updatedPositions = Buffer.Buffer<Position>(0);
