@@ -5,13 +5,16 @@ import ConnectWalletButton from "../ConnectWalletButton/ConnectWalletButton";
 import { useAuth } from "../../context/AuthContext";
 import { useCalculateTotalAmount } from "../../utils/useCalculateTotalAmount";
 import RadioButtons from "../RadioButtons/RadioButtons";
+import BalanceInfo from "../BalanceInfo/BalanceInfo";
+import { Position } from "../../../declarations/dca_backend/dca_backend.did.js";
+import { handleOpenPosition } from "../../utils/auth";
 
 interface FormProps {
     isWalletConnected: boolean;
 }
 
 const Form: React.FC<FormProps> = ({ isWalletConnected }) => {
-    const { isConnected } = useAuth();
+    const { isConnected, actorBackend, whitelist, principal } = useAuth();
 
     const [endDate, setEndDate] = useState<string>("");
 
@@ -26,17 +29,12 @@ const Form: React.FC<FormProps> = ({ isWalletConnected }) => {
         endDate
     );
 
-    console.log("form");
+    // console.log("form");
 
     const handleSubmitForm = (e: React.FormEvent) => {
         e.preventDefault();
-        const submittedData = {
-            tokenToBuy: NEWtokenToBuy.current?.value || "",
-            tokenToSell: NEWtokenToSell.current?.value || "",
-            frequency: radioButtonsRef.current?.getFrequency() || "",
-            amountToSell: NEWamountToSell.current?.value || "",
-        };
-        console.log(JSON.stringify(submittedData, null, 2));
+        handleOpenPosition(actorBackend, whitelist, principal, NEWamountToSell, radioButtonsRef, 100);
+        // console.log(JSON.stringify(submittedData, null, 2));
     };
 
     return (
@@ -80,6 +78,7 @@ const Form: React.FC<FormProps> = ({ isWalletConnected }) => {
                         placeholder="Amount"
                     />
                 </div>
+                <BalanceInfo />
             </div>
 
             <RadioButtons ref={radioButtonsRef} onDataChange={() => {}} />

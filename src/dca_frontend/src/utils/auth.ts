@@ -1,6 +1,8 @@
 import { AuthClient } from "@dfinity/auth-client";
 import { Actor, HttpAgent, Identity } from "@dfinity/agent";
 import { IDL } from "@dfinity/candid";
+import { Principal } from "@dfinity/principal";
+import { Frequency } from "../../declarations/dca_backend/dca_backend.did";
 
 //PlugWallet Auth
 
@@ -10,26 +12,25 @@ export const handlePlugConnect = async (whitelist: string[]): Promise<boolean | 
             const publicKey = await window.ic.plug.requestConnect({
                 whitelist,
             });
-            console.log(`The connected user's public key is:`, publicKey);
+            // console.log(`The connected user's public key is:`, publicKey);
 
             const principalId = await window.ic.plug.agent.getPrincipal();
-            console.log(principalId);
+            // console.log(principalId);
             if (await checkIsPlugConnected()) {
                 return true;
             }
         } else {
-            console.log("Plug wallet is not available");
+            console.warn("Plug wallet is not available");
             return undefined;
         }
     } catch (e) {
-        console.log(e);
+        console.warn(e);
         return undefined;
     }
 };
 
 export const checkIsPlugConnected = async (): Promise<boolean> => {
     const isConnected = await window.ic.plug.isConnected();
-    console.log(isConnected);
     return isConnected;
 };
 
@@ -113,4 +114,33 @@ export const checkIsInternetIdentityConnected = async (
 export const disconnectInternetIdentity = async (client: AuthClient) => {
     console.log(`Client? ${client}`);
     await client.logout();
+};
+
+export const handleOpenPosition = async (
+    actor: any,
+    whitelist: string[],
+    principal: Principal,
+    amount: bigint,
+    frequency: Frequency,
+    purchasesLeft: bigint
+) => {
+    const position = {
+        tokenToSell: Principal.fromText(whitelist[2]),
+        beneficiary: principal,
+        tokenToBuy: Principal.fromText(whitelist[3]),
+        lastPurchaseResult: [],
+        nextRunTime: [],
+        amountToSell: amount,
+        frequency: frequency,
+        purchasesLeft: purchasesLeft,
+    };
+
+    try {
+        if (actor.openPosition) {
+            const op = await actor.openPosition(position);
+            console.log(op);
+        }
+    } catch (error) {
+        console.log(error);
+    }
 };

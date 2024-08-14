@@ -2,19 +2,22 @@ import React, { createContext, useState, useContext, ReactNode } from "react";
 import { AuthClient } from "@dfinity/auth-client";
 import { Identity } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
+import { Frequency } from "../../declarations/dca_backend/dca_backend.did";
 
 interface AuthContextType {
     authClient: AuthClient | undefined;
     isConnected: boolean;
     identity: Identity | undefined;
     principal: Principal | undefined;
-    actor: any;
+    actorBackend: any;
+    actorLedger: any;
     whitelist: string[];
     setAuthClient: React.Dispatch<React.SetStateAction<AuthClient | undefined>>;
     setIsConnected: React.Dispatch<React.SetStateAction<boolean>>;
     setIdentity: React.Dispatch<React.SetStateAction<Identity | undefined>>;
     setPrincipal: React.Dispatch<React.SetStateAction<Principal | undefined>>;
-    setActor: React.Dispatch<React.SetStateAction<any>>;
+    setActorBackend: React.Dispatch<React.SetStateAction<any>>;
+    setActorLedger: React.Dispatch<React.SetStateAction<any>>;
     setWhitelist: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
@@ -33,7 +36,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [isConnected, setIsConnected] = useState<boolean>(false);
     const [identity, setIdentity] = useState<Identity | undefined>(undefined);
     const [principal, setPrincipal] = useState<Principal | undefined>(undefined);
-    const [actor, setActor] = useState<any>(null);
+    const [actorBackend, setActorBackend] = useState<any>(null);
+    const [actorLedger, setActorLedger] = useState<any>(null);
     const [whitelist, setWhitelist] = useState<string[]>([]);
 
     return (
@@ -43,13 +47,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 isConnected,
                 identity,
                 principal,
-                actor,
+                actorBackend,
+                actorLedger,
                 whitelist,
                 setAuthClient,
                 setIsConnected,
                 setIdentity,
                 setPrincipal,
-                setActor,
+                setActorBackend,
+                setActorLedger,
                 setWhitelist,
             }}
         >

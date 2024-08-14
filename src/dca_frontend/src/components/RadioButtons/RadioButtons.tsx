@@ -12,8 +12,6 @@ const RadioButtons = forwardRef((props: RadioButtonsProps, ref) => {
         getFrequency: () => frequency,
     }));
 
-    console.log("rb");
-
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newFrequency = e.target.value;
         setFrequency(newFrequency);

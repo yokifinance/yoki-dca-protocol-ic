@@ -82,6 +82,10 @@ actor class DCA() = self {
             return #err("Not supported token to sell :( Only ICP at this moment");
         };
 
+        if (newPosition.purchasesLeft == 0) {
+            return #err("You need to set at least 1 purchase");
+        };
+
         let currentPositions = switch (Map.get<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, caller)) {
             case (null) {
                 // Create new Buffer if it does not exist
@@ -98,6 +102,7 @@ actor class DCA() = self {
 
         // Save the Buffer to the Map
         ignore Map.put<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, caller, currentPositions);
+        Debug.print("[INFO]: User " # debug_show(caller) # " created new position: " # debug_show(newPosition));
         #ok(currentPositions.size() - 1);
     };
 
@@ -142,6 +147,7 @@ actor class DCA() = self {
                     };
                     case (?position) {
                         ignore positions.remove(index);
+                        Debug.print("[INFO]: User " # debug_show(caller) # " deleted position: " # debug_show(position));
                         return #ok("Position deleted");
                     };
                 };
@@ -166,6 +172,7 @@ actor class DCA() = self {
                     case (?position) {
                         // Perform the multi-stage purchase
                         let purchaseResult = await _performMultiStagePurchase(position);
+                        Debug.print("[INFO]: User " # debug_show(principal) # " executed position with result: " # debug_show(purchaseResult));
                         return purchaseResult;
                     };
                 };
@@ -322,10 +329,6 @@ actor class DCA() = self {
         };
     };
 
-    public shared query (msg) func whoami() : async Principal {
-        msg.caller
-    };
-
     public shared ({ caller }) func withdraw(amount : Nat, address : Principal) : async Result<Nat, L.TransferError> {
         assert caller == admin;
         await _sendIcp(address, amount, null);
@@ -397,7 +400,7 @@ actor class DCA() = self {
         let result = await ICPBTCpool.getUserUnusedBalance(principal);
         switch (result) {
             case (#ok {balance0; balance1}) {
-                return #ok("ckBTC: " #Nat.toText(balance0) # "ICP: " #Nat.toText(balance1));
+                return #ok("ckBTC: " #Nat.toText(balance0) # " ICP: " #Nat.toText(balance1));
             };
             case (#err(_)) {
                 return #err("Error while getting balance");
@@ -450,6 +453,7 @@ actor class DCA() = self {
     private func _checkAndExecutePositions() : async () {
         let currentTime = Time.now();
         let entries = Map.entries(positionsLedger);
+        Debug.print("[INFO] Heartbeat - checking positions");
         for ((user, positionsBuffer) in entries) {
             let positionsArray = Buffer.toArray(positionsBuffer);
             let updatedPositions = Buffer.Buffer<Position>(0);
@@ -457,7 +461,7 @@ actor class DCA() = self {
 
             for (positionId in Iter.range(0, positionsArray.size() - 1)) {
                 let position: Position = positionsArray[positionId];
-                if (currentTime >= Option.get(position.nextRunTime, 0)) {
+                if (currentTime >= Option.get(position.nextRunTime, 0) and position.purchasesLeft > 0) {
                     // Call executePurchase with the correct positionId
                     let purchaseResult = await executePurchase(user, positionId);
                     let newNextRunTime = currentTime + _getTimestampFromFrequency(position.frequency);
@@ -469,6 +473,7 @@ actor class DCA() = self {
                         amountToSell = position.amountToSell;
                         beneficiary = position.beneficiary;
                         frequency = position.frequency;
+                        purchasesLeft = position.purchasesLeft - 1;
                         nextRunTime = ?newNextRunTime;
                         lastPurchaseResult = ?purchaseResult;
                     };

@@ -19,9 +19,9 @@ const PlugWalletButton: React.FC = () => {
     const [authClient, setAuthClient] = useState<AuthClient | undefined>(undefined);
     const [walletProvider, setWalleetProvider] = useState<string | undefined>(undefined);
 
-    useEffect(() => {
-        console.log(identityProvider);
-    }, [identityProvider]);
+    // useEffect(() => {
+    //     console.log(identityProvider);
+    // }, [identityProvider]);
 
     useEffect(() => {
         const id1 = process.env.CANISTER_ID_INTERNET_IDENTITY;

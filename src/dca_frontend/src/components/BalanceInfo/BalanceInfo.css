@@ -1,0 +1,13 @@
+.balance-info {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-top: 5px;
+}
+
+.balance-info__description {
+    font-size: 14px;
+    font-weight: 200;
+    /* color: rgb(201, 203, 211); */
+    /* letter-spacing: 0.7px; */
+}

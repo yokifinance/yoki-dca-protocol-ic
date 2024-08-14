@@ -4,7 +4,7 @@ import InternetIdentityIcon from "../../images/internet-computer-icp-logo.svg";
 import { handleInternetIdentityAuth, createActor, disconnectInternetIdentity } from "../../utils/auth";
 import { useAuth } from "../../context/AuthContext";
 import { Principal } from "@dfinity/principal"; // Import Principal
-import { idlFactory } from "../../../declarations/dca_backend/dca_backend.did.js";
+import { idlFactory as backend } from "../../../declarations/dca_backend/dca_backend.did.js";
 import { idlFactory as legger } from "../../../declarations/icp_ledger_canister/icp_ledger_canister.did.js";
 
 const AuthModalButtons: React.FC = () => {
@@ -13,13 +13,15 @@ const AuthModalButtons: React.FC = () => {
         isConnected,
         identity,
         principal,
-        actor,
+        actorBackend,
+        actorLedger,
         whitelist,
         setAuthClient,
         setIsConnected,
         setIdentity,
         setPrincipal,
-        setActor,
+        setActorBackend,
+        setActorLedger,
         setWhitelist,
     } = useAuth();
 
@@ -40,9 +42,11 @@ const AuthModalButtons: React.FC = () => {
                 setIsConnected(true);
                 setAuthClient(client);
                 const identity = client.getIdentity();
-                const actor = await createActor(whitelist[2], legger, identity); // Pass all required arguments
+                const actorBackend = await createActor(whitelist[1], backend, identity);
+                const actorLedger = await createActor(whitelist[2], legger, identity); // Pass all required arguments
 
-                setActor(actor);
+                setActorBackend(actorBackend);
+                setActorLedger(actorLedger);
                 setPrincipal(identity.getPrincipal());
                 setIdentity(identity);
             }
@@ -58,7 +62,7 @@ const AuthModalButtons: React.FC = () => {
             setPrincipal(undefined);
             setIdentity(undefined);
             setAuthClient(undefined);
-            setActor(null);
+            setActorBackend(null);
         }
     };
 
@@ -67,20 +71,35 @@ const AuthModalButtons: React.FC = () => {
             tokenToSell: Principal.fromText(whitelist[2]),
             beneficiary: principal,
             tokenToBuy: Principal.fromText(whitelist[3]),
-            lastPurchaseResult: [], // Replace with an actual Result__2 value or null
-            nextRunTime: [], // Replace with an actual Time value or null
-            amountToSell: 10_000, // Ensure this is a BigInt
-            frequency: { Daily: null }, // Use 'Daily', 'Weekly', or 'Monthly'
+            lastPurchaseResult: [],
+            nextRunTime: [],
+            amountToSell: 10_000,
+            frequency: { Daily: null },
+            purchasesLeft: 100,
         };
 
         try {
-            // const op = await actor.openPosition(position);
-            // console.log(op);
-            // let result = await actor.whoami();
-            // console.log(result);
-            let lol = Principal.fromText("klcto-2xe2e-hjit4-wphri-c3ify-wgrjd-jc5c2-pbvjd-gpwdx-ib2ra-hae");
-            const res = await actor.icrc1_balance_of({ owner: lol, subaccount: [] });
-            console.log(res);
+            const op = await actorBackend.openPosition(position);
+            console.log(op);
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    const handelGetAllPosition = async () => {
+        try {
+            const pos = await actorBackend.getAllPositions();
+            console.log(pos);
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    const handleGetPositon = async () => {
+        try {
+            const id: bigint = BigInt(1);
+            const pos = await actorBackend.getPosition(id);
+            console.log(pos);
         } catch (error) {
             console.log(error);
         }
@@ -91,6 +110,16 @@ const AuthModalButtons: React.FC = () => {
             <li>
                 <button onClick={handleOpenPositionMethod} className="auth-modal-button auth-modal-button_openposition">
                     <span>open Position</span>
+                </button>
+            </li>
+            <li>
+                <button onClick={handleGetPositon} className="auth-modal-button auth-modal-button_openposition">
+                    <span>get Position</span>
+                </button>
+            </li>
+            <li>
+                <button onClick={handelGetAllPosition} className="auth-modal-button auth-modal-button_openposition">
+                    <span>get all Position</span>
                 </button>
             </li>
             {isConnected ? (
