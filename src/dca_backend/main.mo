@@ -235,6 +235,7 @@ actor class DCA() = self {
                                 return #err("Error while swaping ICP to ckBTC in ICPSwap " # debug_show(error));
                             };
                             case (#ok(value)) {
+                                Debug.print("[INFO]: DEX Swap result value: " # debug_show(value));
                                 let balance0Result = await _getBalance0(Principal.fromActor(self));
                                 let withdrawResult = await ICPBTCpool.withdraw({
                                     amount = balance0Result;
