@@ -15,16 +15,16 @@ const convertFrequencyToDays = (frequency: string): number => {
     return frequencyMapping[frequency] || 1;
 };
 
-const calculateTotalAmount = (amount: number, frequency: string, endDate: string): number => {
+const calculateAmountsAndPayments = (amount: number, frequency: string, endDate: string): Object => {
     const today = new Date();
     const end = parseISO(endDate);
     const daysDifference = differenceInDays(end, today) + 1;
     const frequencyInDays = convertFrequencyToDays(frequency);
     const numberOfPayments = Math.ceil(daysDifference / frequencyInDays);
     const totalAmount = amount * numberOfPayments;
-    return totalAmount;
+    return { totalAmount, numberOfPayments };
 };
 
-export const useCalculateTotalAmount = (amount: number, frequency: string, endDate: string) => {
-    return useMemo(() => calculateTotalAmount(amount, frequency, endDate), [amount, frequency, endDate]);
+export const useCalculateAmountsAndPayments = (amount: number, frequency: string, endDate: string) => {
+    return useMemo(() => calculateAmountsAndPayments(amount, frequency, endDate), [amount, frequency, endDate]);
 };

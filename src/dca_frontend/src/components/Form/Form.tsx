@@ -3,10 +3,10 @@ import "./Form.css";
 import SubmitButton from "../SubmitButton/SubmitButton";
 import ConnectWalletButton from "../ConnectWalletButton/ConnectWalletButton";
 import { useAuth } from "../../context/AuthContext";
-import { useCalculateTotalAmount } from "../../utils/useCalculateTotalAmount";
+import { useCalculateAmountsAndPayments } from "../../utils/useCalculateTotalAmount";
 import RadioButtons from "../RadioButtons/RadioButtons";
 import BalanceInfo from "../BalanceInfo/BalanceInfo";
-import { Position } from "../../../declarations/dca_backend/dca_backend.did.js";
+import { Position, Frequency } from "../../../declarations/dca_backend/dca_backend.did.js";
 import { handleOpenPosition } from "../../utils/auth";
 
 interface FormProps {
@@ -23,18 +23,33 @@ const Form: React.FC<FormProps> = ({ isWalletConnected }) => {
     const NEWamountToSell = useRef<HTMLInputElement>(null);
     const radioButtonsRef = useRef<{ getFrequency: () => string }>(null);
 
-    const totalAmount = useCalculateTotalAmount(
+    const totalAmount = useCalculateAmountsAndPayments(
         NEWamountToSell.current?.valueAsNumber || 0,
         radioButtonsRef.current?.getFrequency() || "",
         endDate
     );
 
-    // console.log("form");
+    const mapToFrequency = (frequency: string): Frequency => {
+        switch (frequency) {
+            case "Weekly":
+                return { Weekly: null };
+            case "Daily":
+                return { Daily: null };
+            case "Monthly":
+                return { Monthly: null };
+            default:
+                console.log(frequency);
+                throw new Error("Invalid frequency");
+        }
+    };
 
     const handleSubmitForm = (e: React.FormEvent) => {
         e.preventDefault();
-        handleOpenPosition(actorBackend, whitelist, principal, NEWamountToSell, radioButtonsRef, 100);
-        // console.log(JSON.stringify(submittedData, null, 2));
+
+        const amountToSell = NEWamountToSell.current?.valueAsNumber || 0;
+        const frequency = mapToFrequency(radioButtonsRef.current?.getFrequency() || "");
+
+        handleOpenPosition(actorBackend, whitelist, principal, BigInt(amountToSell), frequency, BigInt(100));
     };
 
     return (

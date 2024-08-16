@@ -40,7 +40,7 @@
     text-align: center;
 }
 
-.auth-modal__auth-buttons-container {
+.auth-modal__container {
     margin: 30px 0 40px;
     display: flex;
     flex-direction: row;

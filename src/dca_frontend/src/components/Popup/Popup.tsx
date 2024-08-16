@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import "./AuthModal.css";
+import "./Popup.css";
 import closeButtonIcon from "../../images/cross-svgrepo-com.svg";
 
 interface AuthModalProps {
@@ -48,8 +48,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, children }) => {
                 <button className="auth-modal__close-button" onClick={onClose}>
                     <img className="auth-modal__close-button-icon" src={closeButtonIcon}></img>
                 </button>
-                <span className="auth-modal__description">Connect your wallet</span>
-                <div className="auth-modal__auth-buttons-container">{children}</div>
+                <div className="auth-modal__container">{children}</div>
             </div>
         </div>
     );

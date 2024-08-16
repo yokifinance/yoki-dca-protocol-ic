@@ -1,7 +1,7 @@
 // ConnectWalletButton.tsx
 import React, { useState } from "react";
 import "./ConnectWalletButton.css";
-import AuthModal from "../AuthModal/AuthModal";
+import Popup from "../Popup/Popup";
 import AuthModalButtons from "../AuthModalButtons/AuthModalButtons";
 
 const ConnectWalletButton: React.FC = () => {
@@ -20,9 +20,9 @@ const ConnectWalletButton: React.FC = () => {
             <button type="button" className="connect-wallet-button" onClick={handleButtonClick}>
                 Connect Wallet
             </button>
-            <AuthModal isOpen={isModalOpen} onClose={handleCloseModal}>
+            <Popup isOpen={isModalOpen} onClose={handleCloseModal}>
                 <AuthModalButtons />
-            </AuthModal>
+            </Popup>
         </div>
     );
 };

@@ -119,7 +119,7 @@ export const disconnectInternetIdentity = async (client: AuthClient) => {
 export const handleOpenPosition = async (
     actor: any,
     whitelist: string[],
-    principal: Principal,
+    principal: Principal | undefined,
     amount: bigint,
     frequency: Frequency,
     purchasesLeft: bigint
@@ -136,7 +136,7 @@ export const handleOpenPosition = async (
     };
 
     try {
-        if (actor.openPosition) {
+        if (actor.openPosition && principal) {
             const op = await actor.openPosition(position);
             console.log(op);
         }

@@ -18,7 +18,7 @@ const RadioButtons = forwardRef((props: RadioButtonsProps, ref) => {
         props.onDataChange(newFrequency); // Вызываем onDataChange при изменении
     };
 
-    const options = ["1 day", "1 week", "2 weeks"];
+    const options = ["Daily", "Weekly", "Monthly"];
 
     return (
         <>

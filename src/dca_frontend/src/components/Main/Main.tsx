@@ -3,7 +3,7 @@ import "./Main.css";
 import FormContainer from "../FormContainer/FormContainer";
 import FormNavigation from "../FormNavigation/FormNavigation";
 import Form from "../Form/Form";
-import { useCalculateTotalAmount } from "../../utils/useCalculateTotalAmount";
+import { useCalculateAmountsAndPayments } from "../../utils/useCalculateTotalAmount";
 import { validateForm, FormErrors } from "../../utils/validation";
 import Portfolio from "../Portfolio/Portfolio";
 import SubscriptionDetails from "../SubscriptionDetails/SubscriptionDetails";
@@ -20,18 +20,6 @@ const Main: React.FC = () => {
     const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
     const [activeFormNavigationButton, setActiveFormNavigationButton] = useState<number>(0);
     const [showSubscriptionDetails, setShowSubscriptionDetails] = useState<boolean>(false);
-
-    //refactoring
-    //refactoring
-    //refactoring
-    //refactoring
-
-    //refactoring
-    //refactoring
-    //refactoring
-    //refactoring
-
-    const totalAmount = useCalculateTotalAmount(amount, frequency1, endDate);
 
     useEffect(() => {
         const handleEsc = (event: KeyboardEvent) => {

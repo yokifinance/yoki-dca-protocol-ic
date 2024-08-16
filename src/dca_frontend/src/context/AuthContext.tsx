@@ -35,7 +35,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [authClient, setAuthClient] = useState<AuthClient | undefined>(undefined);
     const [isConnected, setIsConnected] = useState<boolean>(false);
     const [identity, setIdentity] = useState<Identity | undefined>(undefined);
-    const [principal, setPrincipal] = useState<Principal | undefined>(undefined);
+    const [principal, setPrincipal] = useState<Principal>();
     const [actorBackend, setActorBackend] = useState<any>(null);
     const [actorLedger, setActorLedger] = useState<any>(null);
     const [whitelist, setWhitelist] = useState<string[]>([]);

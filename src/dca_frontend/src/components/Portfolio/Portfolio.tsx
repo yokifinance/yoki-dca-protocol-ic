@@ -66,7 +66,6 @@ const Portfolio: React.FC<PortfolioProps> = ({ onDetailsClick }) => {
                     <div>Frequency: {Object.keys(item.frequency)[0]}</div>
                     <div>Amount to Sell: {item.amountToSell.toString()}</div>
                     <div>Purchases Left: {item.purchasesLeft.toString()}</div>
-                    <span>{typeof index}</span>
                     <button className="portfolio-item__button" onClick={() => handleButtonClick(index)}>
                         ⋮
                         {showPopup && selectedItem === index && (
