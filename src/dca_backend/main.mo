@@ -24,7 +24,7 @@ import Types "types";
 
 actor class DCA() = self {
     // DCA Types
-    type Result<A, B> = Result.Result<A, B>;
+    type Result<A, B> = Types.Result<A, B>;
     type PositionId = Types.PositionId;
     type Position = Types.Position;
     type TimerActionType = Types.TimerActionType;
@@ -255,7 +255,8 @@ actor class DCA() = self {
                                                 return #err("Error while transferring ckBTC to beneficiary " # debug_show(error) # "Trying to send: " # Nat.toText(amountToSend));
                                             };
                                             case (#ok(value)) {
-                                                return #ok("Position successfully executed !");
+                                                Debug.print("[INFO]: Position successfully executed, ckBTC: " # debug_show(amountToSend));
+                                                return #ok(Nat.toText(amountToSend));
                                             };
                                         };
                                     };
@@ -435,7 +436,7 @@ actor class DCA() = self {
         };
     };
 
-    // Timers
+    // Timers methods and automation logic flow
 
     private func _getTimestampFromFrequency(frequency : Frequency) : Time.Time {
         switch (frequency) {
@@ -454,28 +455,40 @@ actor class DCA() = self {
     private func _checkAndExecutePositions() : async () {
         let currentTime = Time.now();
         let entries = Map.entries(positionsLedger);
+
+        // Iterate over all users
         for ((user, positionsBuffer) in entries) {
             let positionsArray = Buffer.toArray(positionsBuffer);
             let updatedPositions = Buffer.Buffer<Position>(0);
             var updatesMade: Bool = false;
 
+            // Iterate over all positions
             for (positionId in Iter.range(0, positionsArray.size() - 1)) {
                 let position: Position = positionsArray[positionId];
+
                 if (currentTime >= Option.get(position.nextRunTime, 0) and position.purchasesLeft > 0) {
                     // Call executePurchase with the correct positionId
                     let purchaseResult = await executePurchase(user, positionId);
                     let newNextRunTime = currentTime + _getTimestampFromFrequency(position.frequency);
 
+                    let updatedHistory: [Result<Text, Text>] = switch (position.purchaseHistory) {
+                        // If history exists, append the new result
+                        case (?existingHistory) {
+                            Array.append(existingHistory, [purchaseResult]);
+                        };
+                        // If history does not exist, create a new one
+                        case null {
+                            [purchaseResult];
+                        };
+                    };
+
                     // Create a new position state
                     let newPosition: Position = {
-                        tokenToBuy = position.tokenToBuy;
-                        tokenToSell = position.tokenToSell;
-                        amountToSell = position.amountToSell;
-                        beneficiary = position.beneficiary;
-                        frequency = position.frequency;
+                        position with
                         purchasesLeft = position.purchasesLeft - 1;
                         nextRunTime = ?newNextRunTime;
                         lastPurchaseResult = ?purchaseResult;
+                        purchaseHistory = ?updatedHistory;
                     };
                     updatedPositions.add(newPosition);
                     updatesMade := true;
