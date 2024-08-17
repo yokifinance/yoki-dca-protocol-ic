@@ -1,11 +1,15 @@
+import Int "mo:base/Int";
 import Nat "mo:base/Nat";
 import Principal "mo:base/Principal";
-import Text "mo:base/Text";
-import Int "mo:base/Int";
-import Blob "mo:base/Blob";
-import Time "mo:base/Time";
 import Result "mo:base/Result";
+import Text "mo:base/Text";
+import Time "mo:base/Time";
 module {
+
+    public type Result<A, B> = {
+        #ok : A;
+        #err : B;
+    };
 
     // Define the structure of a position
     public type Position = {
@@ -16,10 +20,12 @@ module {
         frequency : Frequency;
         purchasesLeft : Int;
         nextRunTime: ?Time.Time;
-        lastPurchaseResult: ?Result.Result<Text, Text>;
+        lastPurchaseResult: ?Result<Text, Text>;
+        purchaseHistory: ?[Result<Text, Text>];
     };
-
+    // Define the structure of a timer
     public type Frequency = {
+        #TenMinutes;
         #Daily;
         #Weekly;
         #Monthly;
@@ -27,11 +33,7 @@ module {
 
     public type PositionId = Nat;
 
-    public type Result = {
-        #ok : Nat;
-        #err : Error;
-    };
-
+    // Define the helpfull types for the timer actions
     public type TimerActionType = {
         #StartTimer;
         #StopTimer;
