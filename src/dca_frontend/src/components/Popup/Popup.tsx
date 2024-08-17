@@ -1,15 +1,36 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "./Popup.css";
 import closeButtonIcon from "../../images/cross-svgrepo-com.svg";
 
-interface AuthModalProps {
+interface PopupProps {
     isOpen: boolean;
     onClose: () => void;
     children: React.ReactNode;
 }
 
-const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, children }) => {
+const Popup: React.FC<PopupProps> = ({ isOpen, onClose, children }) => {
+    const [isVisible, setIsVisible] = useState(isOpen);
     const modalRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = "hidden";
+        } else {
+            document.body.style.overflow = "auto";
+        }
+        return () => {
+            document.body.style.overflow = "auto";
+        };
+    }, [isOpen]);
+
+    useEffect(() => {
+        if (isOpen) {
+            setIsVisible(true);
+        } else {
+            const timeoutId = setTimeout(() => setIsVisible(false), 300); // Время должно совпадать с длительностью анимации
+            return () => clearTimeout(timeoutId);
+        }
+    }, [isOpen]);
 
     const handleClickOutside = (event: MouseEvent) => {
         if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
@@ -38,20 +59,20 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, children }) => {
         };
     }, [isOpen]);
 
-    if (!isOpen) {
+    if (!isVisible) {
         return null;
     }
 
     return (
-        <div className="auth-modal-overlay">
-            <div className="auth-modal" ref={modalRef}>
-                <button className="auth-modal__close-button" onClick={onClose}>
-                    <img className="auth-modal__close-button-icon" src={closeButtonIcon}></img>
+        <div className={`popup-overlay ${isOpen ? "popup-overlay-show" : "popup-overlay-hide"}`}>
+            <div className={`popup ${isOpen ? "popup-show" : "popup-hide"}`} ref={modalRef}>
+                <button className="popup__close-button" onClick={onClose}>
+                    <img className="popup__close-button-icon" src={closeButtonIcon} alt="Close" />
                 </button>
-                <div className="auth-modal__container">{children}</div>
+                <div className="popup__container">{children}</div>
             </div>
         </div>
     );
 };
 
-export default AuthModal;
+export default Popup;

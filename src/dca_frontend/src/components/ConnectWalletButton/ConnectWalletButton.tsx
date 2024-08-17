@@ -5,14 +5,14 @@ import Popup from "../Popup/Popup";
 import AuthModalButtons from "../AuthModalButtons/AuthModalButtons";
 
 const ConnectWalletButton: React.FC = () => {
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isPopupOpen, setIsPopupOpen] = useState(false);
 
     const handleButtonClick = () => {
-        setIsModalOpen(true);
+        setIsPopupOpen(true);
     };
 
     const handleCloseModal = () => {
-        setIsModalOpen(false);
+        setIsPopupOpen(false);
     };
 
     return (
@@ -20,7 +20,7 @@ const ConnectWalletButton: React.FC = () => {
             <button type="button" className="connect-wallet-button" onClick={handleButtonClick}>
                 Connect Wallet
             </button>
-            <Popup isOpen={isModalOpen} onClose={handleCloseModal}>
+            <Popup isOpen={isPopupOpen} onClose={handleCloseModal}>
                 <AuthModalButtons />
             </Popup>
         </div>

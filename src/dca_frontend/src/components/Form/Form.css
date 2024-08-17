@@ -45,6 +45,25 @@
     width: 100%;
     box-sizing: border-box;
     font-size: 18px;
+    text-align: right;
+
+    /* Убираем стрелки увеличения числа */
+    -moz-appearance: textfield; /* Для Firefox */
+    -webkit-appearance: none; /* Для Chrome, Safari, Edge */
+    appearance: none;
+
+    /* Отключаем увеличение числа скроллом */
+    overflow: hidden;
+}
+
+.select-input__text-field::-webkit-outer-spin-button,
+.select-input__text-field::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.select-input__text-field[type="number"] {
+    -moz-appearance: textfield;
 }
 
 .error {

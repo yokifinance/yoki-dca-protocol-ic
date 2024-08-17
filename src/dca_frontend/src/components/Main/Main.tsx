@@ -8,6 +8,7 @@ import { validateForm, FormErrors } from "../../utils/validation";
 import Portfolio from "../Portfolio/Portfolio";
 import SubscriptionDetails from "../SubscriptionDetails/SubscriptionDetails";
 import FormSubtotal from "../FormSubtotal/FormSubtotal";
+import { CryptoConvertProvider } from "../../context/CryptoConvertContext";
 
 const Main: React.FC = () => {
     const [buyOption, setBuyOption] = useState<string>("");
@@ -49,32 +50,27 @@ const Main: React.FC = () => {
     };
 
     return (
-        <main className="main">
-            <FormContainer>
-                {!showSubscriptionDetails ? (
-                    <>
-                        <FormNavigation
-                            activeFormNavigationButton={activeFormNavigationButton}
-                            onFormNavigationClick={setActiveFormNavigationButton}
-                        />
-                        {activeFormNavigationButton === 0 ? (
-                            <Form isWalletConnected={isWalletConnected} />
-                        ) : (
-                            <Portfolio onDetailsClick={() => setShowSubscriptionDetails(true)} />
-                        )}
-                    </>
-                ) : (
-                    <SubscriptionDetails />
-                )}
-            </FormContainer>
-            <FormSubtotal
-                buyOption={buyOption}
-                sellOption={sellOption}
-                frequency={frequency1}
-                endDate={endDate}
-                amount={amount}
-            />
-        </main>
+        <CryptoConvertProvider>
+            <main className="main">
+                <FormContainer>
+                    {!showSubscriptionDetails ? (
+                        <>
+                            <FormNavigation
+                                activeFormNavigationButton={activeFormNavigationButton}
+                                onFormNavigationClick={setActiveFormNavigationButton}
+                            />
+                            {activeFormNavigationButton === 0 ? (
+                                <Form isWalletConnected={isWalletConnected} />
+                            ) : (
+                                <Portfolio onDetailsClick={() => setShowSubscriptionDetails(true)} />
+                            )}
+                        </>
+                    ) : (
+                        <SubscriptionDetails />
+                    )}
+                </FormContainer>
+            </main>
+        </CryptoConvertProvider>
     );
 };
 
