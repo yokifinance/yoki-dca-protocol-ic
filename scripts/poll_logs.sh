@@ -1,8 +1,12 @@
 #!/bin/bash
 
 BACKEND_CANISTER_NAME="dca_backend"
-# --ic flag for prod, without for local
-ENV="--ic"
+ENV=""
+
+# Проверяем, был ли передан аргумент --ic
+if [[ "$1" == "--ic" ]]; then
+    ENV="--ic"
+fi
 
 # Function to fetch logs and filter out new lines
 fetch_and_filter_logs() {
