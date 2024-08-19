@@ -154,9 +154,15 @@ actor class DCA() = self {
     public shared query ({ caller }) func getAllPositionsTwo() : async Result<[Position], Text> {
 
         switch (Map.get<Principal, [Position]>(positionsLedgerTwo, phash, caller)) {
-            case (null) { return #err("There are no positions available for this user") };
+            case (null) { 
+                return #err("There are no positions available for this user"); 
+            };
             case (?positions) {
-                return #ok(positions);
+                if (positions.size() == 0) {
+                    return #err("There are no positions available for this user");
+                } else {
+                    return #ok(positions);
+                }
             };
         };
     };
@@ -565,7 +571,10 @@ actor class DCA() = self {
                     };
                     updatedPositions.add(newPosition);
                     updatesMade := true;
-                };
+                } else {
+                    // If no purchase was made, keep the position as is
+                    updatedPositions.add(position);
+                    };
             };
 
             // If any updates were made, convert Buffer back to Array and update the map
