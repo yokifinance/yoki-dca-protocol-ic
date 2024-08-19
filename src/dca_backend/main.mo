@@ -31,8 +31,7 @@ actor class DCA() = self {
     type Frequency = Types.Frequency;
 
     // Create HashMap to store a positions
-    let positionsLedger = Map.new<Principal, Buffer.Buffer<Position>>();
-    stable let positionsLedgerTwo = Map.new<Principal, [Position]>();
+    stable let positionsLedger = Map.new<Principal, [Position]>();
 
     // Timers vars
     var globalTimerId: Nat = 0;
@@ -87,42 +86,7 @@ actor class DCA() = self {
             return #err("You need to set at least 1 purchase");
         };
 
-        let currentPositions = switch (Map.get<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, caller)) {
-            case (null) {
-                // Create new Buffer if it does not exist
-                Buffer.Buffer<Position>(1);
-            };
-            case (?positions) {
-                // Use existing Buffer if it exists
-                positions;
-            };
-        };
-
-        // add new position to the Buffer
-        currentPositions.add(newPosition);
-
-        // Save the Buffer to the Map
-        ignore Map.put<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, caller, currentPositions);
-        Debug.print("[INFO]: User " # debug_show(caller) # " created new position: " # debug_show(newPosition));
-        #ok(currentPositions.size() - 1);
-    };
-
-    // Method to create a new position
-    public shared ({ caller }) func openPositionTwo(newPosition : Position) : async Result<PositionId, Text> {
-
-        if (newPosition.tokenToBuy != Principal.fromText("mxzaz-hqaaa-aaaar-qaada-cai")) {
-            return #err("Not supported token to buy :( Only ckBTC at this moment");
-        };
-
-        if (newPosition.tokenToSell != Principal.fromText("ryjl3-tyaaa-aaaaa-aaaba-cai")) {
-            return #err("Not supported token to sell :( Only ICP at this moment");
-        };
-
-        if (newPosition.purchasesLeft == 0) {
-            return #err("You need to set at least 1 purchase");
-        };
-
-        let currentPositions: [Position] = switch (Map.get<Principal, [Position]>(positionsLedgerTwo, phash, caller)) {
+        let currentPositions: [Position] = switch (Map.get<Principal, [Position]>(positionsLedger, phash, caller)) {
             case (null) {
                 // Create new Array if it does not exist
                 [newPosition];
@@ -135,25 +99,14 @@ actor class DCA() = self {
         let updatedPositions: [Position] = Array.append<Position>(currentPositions, [newPosition]);
 
         // Save the Array to the Map
-        ignore Map.put<Principal, [Position]>(positionsLedgerTwo, phash, caller, updatedPositions);
+        ignore Map.put<Principal, [Position]>(positionsLedger, phash, caller, updatedPositions);
         Debug.print("[INFO]: User " # debug_show(caller) # " created new position: " # debug_show(newPosition));
         #ok(updatedPositions.size() - 1);
     };
 
     public shared query ({ caller }) func getAllPositions() : async Result<[Position], Text> {
 
-        switch (Map.get<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, caller)) {
-            case (null) { return #err("There are no positions available for this user") };
-            case (?positions) {
-                let positionsArray = Buffer.toArray<Position>(positions);
-                return #ok(positionsArray);
-            };
-        };
-    };
-
-    public shared query ({ caller }) func getAllPositionsTwo() : async Result<[Position], Text> {
-
-        switch (Map.get<Principal, [Position]>(positionsLedgerTwo, phash, caller)) {
+        switch (Map.get<Principal, [Position]>(positionsLedger, phash, caller)) {
             case (null) { 
                 return #err("There are no positions available for this user"); 
             };
@@ -169,11 +122,12 @@ actor class DCA() = self {
 
     public shared query ({ caller }) func getPosition(index : Nat) : async Result<Position, Text> {
 
-        switch (Map.get<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, caller)) {
+        switch (Map.get<Principal, [Position]>(positionsLedger, phash, caller)) {
             case (null) { return #err("There are no positions available for this user") };
             case (?positions) {
                 // use getOpt for safe getting position by index
-                let position = positions.getOpt(index);
+                let positionsBuffer = Buffer.fromArray<Position>(positions);
+                let position = positionsBuffer.getOpt(index);
                 switch (position) {
                     case (null) {
                         return #err("Position does not exist for this index");
@@ -186,29 +140,7 @@ actor class DCA() = self {
 
     public shared ({ caller }) func closePosition(index : Nat) : async Result<Text, Text> {
 
-        switch (Map.get<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, caller)) {
-            case (null) { return #err("There are no positions available for this user") };
-            case (?positions) {
-                // use getOpt for safe getting position by index
-                let position = positions.getOpt(index);
-                switch (position) {
-                    case (null) {
-                        return #err("Position does not exist for this index");
-                    };
-                    case (?position) {
-                        ignore positions.remove(index);
-                        Debug.print("[INFO]: User " # debug_show(caller) # " deleted position: " # debug_show(position));
-                        return #ok("Position deleted");
-                    };
-                };
-            };
-        };
-
-    };
-
-    public shared ({ caller }) func closePositionTwo(index : Nat) : async Result<Text, Text> {
-
-        switch (Map.get<Principal, [Position]>(positionsLedgerTwo, phash, caller)) {
+        switch (Map.get<Principal, [Position]>(positionsLedger, phash, caller)) {
             case (null) { return #err("There are no positions available for this user") };
             case (?positions) {
                 // use getOpt for safe getting position by index
@@ -221,7 +153,7 @@ actor class DCA() = self {
                     case (?position) {
                         ignore positionsBuffer.remove(index);
                         let updatedPositions = Buffer.toArray<Position>(positionsBuffer);
-                        ignore Map.put<Principal, [Position]>(positionsLedgerTwo, phash, caller, updatedPositions);
+                        ignore Map.put<Principal, [Position]>(positionsLedger, phash, caller, updatedPositions);
                         Debug.print("[INFO]: User " # debug_show(caller) # " deleted position: " # debug_show(position));
                         return #ok("Position deleted");
                     };
@@ -235,7 +167,7 @@ actor class DCA() = self {
         if (caller != Principal.fromActor(self)){
             return #err("Only DCA canister can execute this method");
         };
-        switch (Map.get<Principal, [Position]>(positionsLedgerTwo, phash, principal)) {
+        switch (Map.get<Principal, [Position]>(positionsLedger, phash, principal)) {
             case (null) { return #err("There are no positions available for this user") };
             case (?positions) {
                 // use getOpt for safe getting position by index
@@ -533,7 +465,7 @@ actor class DCA() = self {
 
     private func _checkAndExecutePositions() : async () {
         Debug.print("Checking and executing positions");
-        let entries = Map.entries(positionsLedgerTwo);
+        let entries = Map.entries(positionsLedger);
         let currentTime = Time.now();
 
         // Iterate over all users
@@ -579,7 +511,7 @@ actor class DCA() = self {
 
             // If any updates were made, convert Buffer back to Array and update the map
             if (updatesMade) {
-                ignore Map.put<Principal, [Position]>(positionsLedgerTwo, phash, user, Buffer.toArray<Position>(updatedPositions));
+                ignore Map.put<Principal, [Position]>(positionsLedger, phash, user, Buffer.toArray<Position>(updatedPositions));
             };
         };
     };
