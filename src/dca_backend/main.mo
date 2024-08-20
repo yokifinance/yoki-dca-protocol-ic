@@ -24,14 +24,14 @@ import Types "types";
 
 actor class DCA() = self {
     // DCA Types
-    type Result<A, B> = Result.Result<A, B>;
+    type Result<A, B> = Types.Result<A, B>;
     type PositionId = Types.PositionId;
     type Position = Types.Position;
     type TimerActionType = Types.TimerActionType;
     type Frequency = Types.Frequency;
 
     // Create HashMap to store a positions
-    let positionsLedger = Map.new<Principal, Buffer.Buffer<Position>>();
+    stable let positionsLedger = Map.new<Principal, [Position]>();
 
     // Timers vars
     var globalTimerId: Nat = 0;
@@ -82,43 +82,52 @@ actor class DCA() = self {
             return #err("Not supported token to sell :( Only ICP at this moment");
         };
 
-        let currentPositions = switch (Map.get<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, caller)) {
+        if (newPosition.purchasesLeft == 0) {
+            return #err("You need to set at least 1 purchase");
+        };
+
+        let currentPositions: [Position] = switch (Map.get<Principal, [Position]>(positionsLedger, phash, caller)) {
             case (null) {
-                // Create new Buffer if it does not exist
-                Buffer.Buffer<Position>(1);
+                // Create new Array if it does not exist
+                [newPosition];
             };
             case (?positions) {
-                // Use existing Buffer if it exists
+                // Use existing Array if it exists
                 positions;
             };
         };
+        let updatedPositions: [Position] = Array.append<Position>(currentPositions, [newPosition]);
 
-        // add new position to the Buffer
-        currentPositions.add(newPosition);
-
-        // Save the Buffer to the Map
-        ignore Map.put<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, caller, currentPositions);
-        #ok(currentPositions.size() - 1);
+        // Save the Array to the Map
+        ignore Map.put<Principal, [Position]>(positionsLedger, phash, caller, updatedPositions);
+        Debug.print("[INFO]: User " # debug_show(caller) # " created new position: " # debug_show(newPosition));
+        #ok(updatedPositions.size() - 1);
     };
 
     public shared query ({ caller }) func getAllPositions() : async Result<[Position], Text> {
 
-        switch (Map.get<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, caller)) {
-            case (null) { return #err("There are no positions available for this user") };
+        switch (Map.get<Principal, [Position]>(positionsLedger, phash, caller)) {
+            case (null) { 
+                return #err("There are no positions available for this user"); 
+            };
             case (?positions) {
-                let positionsArray = Buffer.toArray<Position>(positions);
-                return #ok(positionsArray);
+                if (positions.size() == 0) {
+                    return #err("There are no positions available for this user");
+                } else {
+                    return #ok(positions);
+                }
             };
         };
     };
 
     public shared query ({ caller }) func getPosition(index : Nat) : async Result<Position, Text> {
 
-        switch (Map.get<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, caller)) {
+        switch (Map.get<Principal, [Position]>(positionsLedger, phash, caller)) {
             case (null) { return #err("There are no positions available for this user") };
             case (?positions) {
                 // use getOpt for safe getting position by index
-                let position = positions.getOpt(index);
+                let positionsBuffer = Buffer.fromArray<Position>(positions);
+                let position = positionsBuffer.getOpt(index);
                 switch (position) {
                     case (null) {
                         return #err("Position does not exist for this index");
@@ -131,17 +140,21 @@ actor class DCA() = self {
 
     public shared ({ caller }) func closePosition(index : Nat) : async Result<Text, Text> {
 
-        switch (Map.get<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, caller)) {
+        switch (Map.get<Principal, [Position]>(positionsLedger, phash, caller)) {
             case (null) { return #err("There are no positions available for this user") };
             case (?positions) {
                 // use getOpt for safe getting position by index
-                let position = positions.getOpt(index);
+                let positionsBuffer = Buffer.fromArray<Position>(positions);
+                let position = positionsBuffer.getOpt(index);
                 switch (position) {
                     case (null) {
                         return #err("Position does not exist for this index");
                     };
                     case (?position) {
-                        ignore positions.remove(index);
+                        ignore positionsBuffer.remove(index);
+                        let updatedPositions = Buffer.toArray<Position>(positionsBuffer);
+                        ignore Map.put<Principal, [Position]>(positionsLedger, phash, caller, updatedPositions);
+                        Debug.print("[INFO]: User " # debug_show(caller) # " deleted position: " # debug_show(position));
                         return #ok("Position deleted");
                     };
                 };
@@ -154,11 +167,12 @@ actor class DCA() = self {
         if (caller != Principal.fromActor(self)){
             return #err("Only DCA canister can execute this method");
         };
-        switch (Map.get<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, principal)) {
+        switch (Map.get<Principal, [Position]>(positionsLedger, phash, principal)) {
             case (null) { return #err("There are no positions available for this user") };
             case (?positions) {
                 // use getOpt for safe getting position by index
-                let position = positions.getOpt(index);
+                let positionsBuffer = Buffer.fromArray<Position>(positions);
+                let position = positionsBuffer.getOpt(index);
                 switch (position) {
                     case (null) {
                         return #err("Position does not exist for this index");
@@ -166,6 +180,7 @@ actor class DCA() = self {
                     case (?position) {
                         // Perform the multi-stage purchase
                         let purchaseResult = await _performMultiStagePurchase(position);
+                        Debug.print("[INFO]: User " # debug_show(principal) # " executed position with result: " # debug_show(purchaseResult));
                         return purchaseResult;
                     };
                 };
@@ -228,6 +243,7 @@ actor class DCA() = self {
                                 return #err("Error while swaping ICP to ckBTC in ICPSwap " # debug_show(error));
                             };
                             case (#ok(value)) {
+                                Debug.print("[INFO]: DEX Swap result value: " # debug_show(value));
                                 let balance0Result = await _getBalance0(Principal.fromActor(self));
                                 let withdrawResult = await ICPBTCpool.withdraw({
                                     amount = balance0Result;
@@ -236,17 +252,19 @@ actor class DCA() = self {
                                 });
                                 switch withdrawResult {
                                     case (#err(error)) {
-                                        return #err("Error while withdrawing ckBTC from pool " # debug_show(error));
+                                        return #err("Error while withdrawing ckBTC from pool " # debug_show(error)) ;
                                     };
                                     case (#ok(value)) {
                                         let previousStepFee = 10; // Default ckBTC fee
-                                        let sendCkBtcResult = await _sendCkBTC(position.beneficiary, balance0Result - previousStepFee, null);
+                                        let amountToSend = balance0Result - previousStepFee;
+                                        let sendCkBtcResult = await _sendCkBTC(position.beneficiary, amountToSend, null);
                                         switch sendCkBtcResult {
                                             case (#err(error)) {
-                                                return #err("Error while transferring ckBTC to beneficiary " # debug_show(error));
+                                                return #err("Error while transferring ckBTC to beneficiary " # debug_show(error) # "Trying to send: " # Nat.toText(amountToSend));
                                             };
                                             case (#ok(value)) {
-                                                return #ok("Position successfully executed !");
+                                                Debug.print("[INFO]: Position successfully executed, ckBTC: " # debug_show(amountToSend));
+                                                return #ok(Nat.toText(amountToSend));
                                             };
                                         };
                                     };
@@ -392,7 +410,7 @@ actor class DCA() = self {
         let result = await ICPBTCpool.getUserUnusedBalance(principal);
         switch (result) {
             case (#ok {balance0; balance1}) {
-                return #ok("ckBTC: " #Nat.toText(balance0) # "ICP: " #Nat.toText(balance1));
+                return #ok("ckBTC: " #Nat.toText(balance0) # " ICP: " #Nat.toText(balance1));
             };
             case (#err(_)) {
                 return #err("Error while getting balance");
@@ -426,10 +444,13 @@ actor class DCA() = self {
         };
     };
 
-    // Timers
+    // Timers methods and automation logic flow
 
     private func _getTimestampFromFrequency(frequency : Frequency) : Time.Time {
         switch (frequency) {
+            case (#TenMinutes) {
+                MINUTE * 10;
+            };
             case (#Daily) {
                 DAY;
             };
@@ -443,38 +464,54 @@ actor class DCA() = self {
     };
 
     private func _checkAndExecutePositions() : async () {
-        let currentTime = Time.now();
+        Debug.print("Checking and executing positions");
         let entries = Map.entries(positionsLedger);
-        for ((user, positionsBuffer) in entries) {
-            let positionsArray = Buffer.toArray(positionsBuffer);
-            let updatedPositions = Buffer.Buffer<Position>(0);
+        let currentTime = Time.now();
+
+        // Iterate over all users
+        for ((user, positionsArray) in entries) {
+            let updatedPositions: Buffer.Buffer<Position> = Buffer.Buffer<Position>(0);
             var updatesMade: Bool = false;
 
+            // Iterate over all positions
             for (positionId in Iter.range(0, positionsArray.size() - 1)) {
                 let position: Position = positionsArray[positionId];
-                if (currentTime >= Option.get(position.nextRunTime, 0)) {
+
+                if (currentTime >= Option.get(position.nextRunTime, 0) and position.purchasesLeft > 0) {
                     // Call executePurchase with the correct positionId
                     let purchaseResult = await executePurchase(user, positionId);
                     let newNextRunTime = currentTime + _getTimestampFromFrequency(position.frequency);
 
+                    let updatedHistory: [Result<Text, Text>] = switch (position.purchaseHistory) {
+                        // If history exists, append the new result
+                        case (?existingHistory) {
+                            Array.append(existingHistory, [purchaseResult]);
+                        };
+                        // If history does not exist, create a new one
+                        case null {
+                            [purchaseResult];
+                        };
+                    };
+
                     // Create a new position state
                     let newPosition: Position = {
-                        tokenToBuy = position.tokenToBuy;
-                        tokenToSell = position.tokenToSell;
-                        amountToSell = position.amountToSell;
-                        beneficiary = position.beneficiary;
-                        frequency = position.frequency;
+                        position with
+                        purchasesLeft = position.purchasesLeft - 1;
                         nextRunTime = ?newNextRunTime;
                         lastPurchaseResult = ?purchaseResult;
+                        purchaseHistory = ?updatedHistory;
                     };
                     updatedPositions.add(newPosition);
                     updatesMade := true;
-                };
+                } else {
+                    // If no purchase was made, keep the position as is
+                    updatedPositions.add(position);
+                    };
             };
 
-            // If any updates were made, convert array back to Buffer and update the map
+            // If any updates were made, convert Buffer back to Array and update the map
             if (updatesMade) {
-                ignore Map.put<Principal, Buffer.Buffer<Position>>(positionsLedger, phash, user, updatedPositions);
+                ignore Map.put<Principal, [Position]>(positionsLedger, phash, user, Buffer.toArray<Position>(updatedPositions));
             };
         };
     };
@@ -499,12 +536,12 @@ actor class DCA() = self {
     };
 
     private func _startScheduler() : async Nat {
-        Timer.recurringTimer<system>(((#nanoseconds (MINUTE * 1)), _checkAndExecutePositions));
+        Timer.recurringTimer<system>(((#nanoseconds (MINUTE * 3)), _checkAndExecutePositions));
     };
 
     // In order to restart timers after the canister upgrade
     system func postupgrade() {
-        let timerId = Timer.recurringTimer<system>(((#nanoseconds (MINUTE * 1)), _checkAndExecutePositions));
+        let timerId = Timer.recurringTimer<system>(((#nanoseconds (MINUTE * 3)), _checkAndExecutePositions));
         globalTimerId := timerId;
         Debug.print("Postupgrade Timer started: " # debug_show(timerId));
     };
