@@ -52,13 +52,17 @@ export const disconnectPlug = async (): Promise<void> => {
 // InternetIdentity Auth
 
 export const getIdentityProvider = (): string | undefined => {
+    console.log(process.env);
     if (typeof window !== "undefined") {
         const isLocal = process.env.DFX_NETWORK !== "ic";
         const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
         if (isLocal && isSafari) {
             return `http://localhost:4943/?canisterId=${process.env.CANISTER_ID_INTERNET_IDENTITY}`;
         } else if (isLocal) {
+            console.log(`http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943`);
             return `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943`;
+        } else if (!isLocal) {
+            return `https://identity.ic0.app/#authorize`;
         }
     }
     return undefined;
@@ -68,7 +72,6 @@ export const handleInternetIdentityAuth = async (): Promise<AuthClient | void> =
     try {
         const authClient = await AuthClient.create();
         const identityProvider = getIdentityProvider();
-        console.log(identityProvider); // Make sure this function is defined
 
         await new Promise<void>((resolve, reject) => {
             authClient.login({
@@ -94,6 +97,7 @@ export const createActor = async (canisterId: string, idlFactory: IDL.InterfaceF
         agent,
         canisterId: canisterId,
     });
+
     await agent.fetchRootKey();
     return actor;
 };
@@ -103,7 +107,6 @@ export const checkIsInternetIdentityConnected = async (
 ): Promise<boolean | undefined> => {
     if (client) {
         const isAuthenticated = await client.isAuthenticated();
-        console.log(isAuthenticated);
         return isAuthenticated;
     } else {
         console.warn("Internet Identity is unavialable");
@@ -112,7 +115,9 @@ export const checkIsInternetIdentityConnected = async (
 };
 
 export const disconnectInternetIdentity = async (client: AuthClient) => {
-    console.log(`Client? ${client}`);
+    const identity = await client.getIdentity();
+    const pr = await identity.getPrincipal().toString();
+    console.log(pr);
     await client.logout();
 };
 
@@ -129,6 +134,7 @@ export const handleOpenPosition = async (
         beneficiary: principal,
         tokenToBuy: Principal.fromText(whitelist[3]),
         lastPurchaseResult: [],
+        purchaseHistory: [],
         nextRunTime: [],
         amountToSell: amount,
         frequency: frequency,
@@ -139,8 +145,10 @@ export const handleOpenPosition = async (
         if (actor.openPosition && principal) {
             const op = await actor.openPosition(position);
             console.log(op);
+            return op;
         }
     } catch (error) {
         console.log(error);
+        throw error;
     }
 };

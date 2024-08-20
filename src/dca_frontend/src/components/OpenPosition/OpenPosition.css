@@ -45,6 +45,22 @@
 
 .open-position__button_approve button {
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-    transition: background-color 0.3s ease;
-    background: linear-gradient(rgb(32, 201, 151) 0%, rgb(26, 161, 121) 100%);
+    transition: background-color 0.3s ease, transform 0.3s ease, background 0.3s ease;
+    background-color: rgb(32, 201, 151);
+    cursor: pointer; /* Меняет курсор на указатель */
+}
+
+.open-position__button_approve button:hover {
+    background-color: rgb(26, 161, 121);
+    transform: translateY(-1px) translateX(1px);
+}
+
+.open-position__button_change button {
+    transition: transform 0.3s ease, background-color 0.3s ease;
+    cursor: pointer;
+}
+
+.open-position__button_change button:hover {
+    transform: translateX(-2px);
+    background-color: rgba(185, 185, 185, 0.367);
 }

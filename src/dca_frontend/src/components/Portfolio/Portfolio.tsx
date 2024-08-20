@@ -2,6 +2,11 @@ import React, { useEffect, useState } from "react";
 import "./Portfolio.css";
 import { useAuth } from "../../context/AuthContext";
 import { Position } from "../../../declarations/dca_backend/dca_backend.did.js";
+import icpIcon from "../../images/internet-computer-icp-logo.svg";
+import { useCryptoConvert } from "../../context/CryptoConvertContext";
+import ckBTCIcon from "../../images/ckBTC.svg";
+import inProgressIcon from "../../images/repeat-svgrepo-com.svg";
+import doneIcon from "../../images/checkmark-xs-svgrepo-com.svg";
 
 interface PortfolioProps {
     onDetailsClick: () => void;
@@ -10,6 +15,7 @@ interface PortfolioProps {
 const Portfolio: React.FC<PortfolioProps> = ({ onDetailsClick }) => {
     const { isConnected, actorBackend } = useAuth();
     const [positions, setPosition] = useState<Position[]>([]);
+    const convert = useCryptoConvert();
 
     useEffect(() => {
         const getAllPosition = async () => {
@@ -17,6 +23,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ onDetailsClick }) => {
                 const pos = await actorBackend.getAllPositions();
                 if (pos.ok) {
                     setPosition(pos.ok);
+                    console.log(pos.ok);
                 }
             } catch (error) {
                 console.log("Error fetching positions:", error);
@@ -32,6 +39,15 @@ const Portfolio: React.FC<PortfolioProps> = ({ onDetailsClick }) => {
 
     const [showPopup, setShowPopup] = useState<boolean>(false);
     const [selectedItem, setSelectedItem] = useState<number | null>(null);
+
+    const convertToken = async (amountToConvert: BigInt) => {
+        try {
+            const convertedIcp = await convert.ICP.BTC(Number(amountToConvert));
+            return convertedIcp;
+        } catch (error) {
+            console.warn("Error converting ICP to BTC:", error);
+        }
+    };
 
     const handleButtonClick = (id: number) => {
         console.log(`Button clicked for item with index: ${id}`);
@@ -59,13 +75,60 @@ const Portfolio: React.FC<PortfolioProps> = ({ onDetailsClick }) => {
         }
     };
 
+    const castAmounts = (amount: BigInt): string => {
+        const devidedAmount = Number(amount) / 100000000;
+        return devidedAmount.toString();
+    };
+
+    const getCurrentStatus = (purchasesLeft: BigInt): boolean => {
+        console.log(purchasesLeft);
+        if (Number(purchasesLeft) > 0) {
+            return false;
+        }
+        return true;
+    };
+
+    // const countTotalAmount = ()
+
     return (
-        <div className="portfolio">
+        <ul className="portfolio">
             {positions.map((item, index) => (
-                <div className="portfolio-item" key={index}>
-                    <div>Frequency: {Object.keys(item.frequency)[0]}</div>
-                    <div>Amount to Sell: {item.amountToSell.toString()}</div>
-                    <div>Purchases Left: {item.purchasesLeft.toString()}</div>
+                <li className="portfolio-item" key={index}>
+                    <div className="portfolio-item__status-container">
+                        <div className="portfolio-item__status-sub-container">
+                            <img
+                                className="portfolio-item__status-icon"
+                                src={getCurrentStatus(item.purchasesLeft) ? doneIcon : inProgressIcon}
+                                alt="Internet Identity"
+                            />
+                            <span className="portfolio-item__value">{Object.keys(item.frequency)[0]}</span>
+                        </div>
+                        <span className="portfolio-item__warn-description">
+                            {getCurrentStatus(item.purchasesLeft) ? "Done" : "In progress"}
+                        </span>
+                    </div>
+                    <div className="portfolio-item__container">
+                        <div className="portfolio-item__sub-container">
+                            <span className="portfolio-item__key">Purchases left:</span>
+                            <div className="portfolio-item__details-container">
+                                <span className="portfolio-item__value">{item.purchasesLeft.toString()}</span>
+                            </div>
+                        </div>
+                        <div className="portfolio-item__sub-container">
+                            <span className="portfolio-item__key">Amount to sale:</span>
+                            <div className="portfolio-item__details-container">
+                                <span className="portfolio-item__value">{castAmounts(item.amountToSell)} ICP</span>
+                                <img className="portfolio-item__image" src={icpIcon} alt="Internet Identity" />
+                            </div>
+                        </div>
+                        <div className="portfolio-item__sub-container">
+                            <span className="portfolio-item__key">Total tokens bought:</span>
+                            <div className="portfolio-item__details-container">
+                                <span className="portfolio-item__value">1000 BTC</span>
+                                <img className="portfolio-item__image" src={ckBTCIcon} alt="Internet Identity" />
+                            </div>
+                        </div>
+                    </div>
                     <button className="portfolio-item__button" onClick={() => handleButtonClick(index)}>
                         ⋮
                         {showPopup && selectedItem === index && (
@@ -74,10 +137,12 @@ const Portfolio: React.FC<PortfolioProps> = ({ onDetailsClick }) => {
                             </div>
                         )}
                     </button>
-                </div>
+                </li>
             ))}
-        </div>
+        </ul>
     );
 };
+
+// item.amountToSell.toString()
 
 export default Portfolio;

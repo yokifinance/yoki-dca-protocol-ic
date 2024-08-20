@@ -2,17 +2,16 @@ import { useMemo } from "react";
 import { differenceInDays, parseISO } from "date-fns";
 
 const convertFrequencyToDays = (frequency: string): number => {
-    const frequencyMapping: { [key: string]: number } = {
-        "1 hour": 1 / 24,
-        "4 hours": 4 / 24,
-        "8 hours": 8 / 24,
-        "12 hours": 12 / 24,
-        "1 day": 1,
-        "1 week": 7,
-        "2 weeks": 14,
-        "4 weeks": 28,
-    };
-    return frequencyMapping[frequency] || 1;
+    if (frequency !== "") {
+        const frequencyMapping: { [key: string]: number } = {
+            Dayli: 1,
+            Weekly: 7,
+            Monthly: 28,
+        };
+        return frequencyMapping[frequency];
+    } else {
+        return 1;
+    }
 };
 
 const calculateAmountsAndPayments = (amount: number, frequency: string, endDate: string): Object => {

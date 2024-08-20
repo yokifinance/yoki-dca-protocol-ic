@@ -11,7 +11,7 @@ const BalanceInfo: React.FC = () => {
         if (isConnected && actorLedger && principal) {
             try {
                 const res = await actorLedger.icrc1_balance_of({ owner: principal, subaccount: [] });
-                setBalance(Number(res));
+                setBalance(Number(res) / 100000000);
             } catch (error) {
                 console.warn(`Error fetching balance: ${error}`);
             }

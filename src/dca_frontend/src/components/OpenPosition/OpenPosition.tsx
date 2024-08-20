@@ -1,8 +1,9 @@
-import React, { Children, useState } from "react";
+import React, { useState } from "react";
 import "./OpenPosition.css";
 import { handleOpenPosition } from "../../utils/auth";
 import { Position, Frequency } from "../../../declarations/dca_backend/dca_backend.did.js";
 import { useAuth } from "../../context/AuthContext";
+import { Principal } from "@dfinity/principal";
 
 interface OpenPositionProps {
     children: React.ReactNode;
@@ -11,10 +12,23 @@ interface OpenPositionProps {
     frequency: string;
     endDate: string;
     amount: number;
+    onClose: () => void;
+    numberOfPayments: number;
 }
 
-const OpenPosition: React.FC<OpenPositionProps> = ({ children, buyOption, sellOption, frequency, endDate, amount }) => {
-    const { isConnected, actorBackend, whitelist, principal } = useAuth();
+const OpenPosition: React.FC<OpenPositionProps> = ({
+    children,
+    buyOption,
+    sellOption,
+    frequency,
+    endDate,
+    amount,
+    onClose,
+    numberOfPayments,
+}) => {
+    const { isConnected, actorBackend, actorLedger, whitelist, principal } = useAuth();
+    const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+    const [isPositionCreated, setIsPositionCreated] = useState<boolean>(false);
 
     const mapToFrequency = (frequency: string): Frequency => {
         switch (frequency) {
@@ -30,9 +44,48 @@ const OpenPosition: React.FC<OpenPositionProps> = ({ children, buyOption, sellOp
         }
     };
 
-    const openPosition = () => {
-        const mappedFrequency = mapToFrequency(frequency);
-        handleOpenPosition(actorBackend, whitelist, principal, BigInt(amount), mappedFrequency, BigInt(100));
+    const openPosition = async () => {
+        setIsSubmitting(true);
+
+        try {
+            // const totalPurchasesAmmount = (amount * 100000000 + 10_000) * numberOfPayments;
+
+            // const approveArgs = {
+            //     amount: totalPurchasesAmmount,
+            //     spender: {
+            //         owner: backendPrincipal,
+            //         subaccount: [],
+            //     },
+            //     fee: [],
+            //     memo: [],
+            //     from_subaccount: [],
+            //     created_at_time: [],
+            //     expected_allowance: [],
+            //     expires_at: [],
+            // };
+
+            // const approve = await actorLedger.icrc2_approve(approveArgs);
+            const approve = { ok: true };
+
+            if (approve.ok) {
+                const mappedFrequency = mapToFrequency(frequency);
+                const response = await handleOpenPosition(
+                    actorBackend,
+                    whitelist,
+                    principal,
+                    BigInt(amount * 100000000),
+                    mappedFrequency,
+                    BigInt(numberOfPayments)
+                );
+                if (response.ok !== undefined) {
+                    setIsPositionCreated(true);
+                }
+            }
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -42,10 +95,12 @@ const OpenPosition: React.FC<OpenPositionProps> = ({ children, buyOption, sellOp
             <p className="open-position__warn-text">Your first purchase will proceed right away</p>
             <ul className="open-position__buttons">
                 <li className="open-position__button open-position__button_approve">
-                    <button onClick={openPosition}>Create subscription</button>
+                    <button onClick={openPosition} disabled={isSubmitting}>
+                        {isPositionCreated ? "Position created" : isSubmitting ? "Creating..." : "Create subscription"}
+                    </button>
                 </li>
-                <li className="open-position__button open-position__button_change">
-                    <button>Correct form</button>
+                <li className="open-position__button open-position__button_change" onClick={onClose}>
+                    <button disabled={isSubmitting}>Correct form</button>
                 </li>
             </ul>
         </div>

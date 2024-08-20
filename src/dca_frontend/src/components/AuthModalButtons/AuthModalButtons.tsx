@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import "./AuthModalButtons.css";
 import InternetIdentityIcon from "../../images/internet-computer-icp-logo.svg";
+import PlugIcon from "../../images/plugLogo.png";
 import { handleInternetIdentityAuth, createActor, disconnectInternetIdentity } from "../../utils/auth";
 import { useAuth } from "../../context/AuthContext";
 import { Principal } from "@dfinity/principal"; // Import Principal
@@ -107,7 +108,7 @@ const AuthModalButtons: React.FC = () => {
 
     return (
         <ul className="auth-modal-buttons__list">
-            <li>
+            {/* <li>
                 <button onClick={handleOpenPositionMethod} className="auth-modal-button auth-modal-button_openposition">
                     <span>open Position</span>
                 </button>
@@ -121,7 +122,7 @@ const AuthModalButtons: React.FC = () => {
                 <button onClick={handelGetAllPosition} className="auth-modal-button auth-modal-button_openposition">
                     <span>get all Position</span>
                 </button>
-            </li>
+            </li> */}
             {isConnected ? (
                 <li className="auth-modal-button__item">
                     <button onClick={handleLogout} className="auth-modal-button auth-modal-button_disconnect">
@@ -129,12 +130,27 @@ const AuthModalButtons: React.FC = () => {
                     </button>
                 </li>
             ) : (
-                <li className="auth-modal-button__item">
-                    <button onClick={handleLoginToInternetIdentity} className="auth-modal-button auth-modal-button_ii">
-                        <span>Internet Identity</span>
-                        <img className="auth-modal-button__image" src={InternetIdentityIcon} alt="Internet Identity" />
-                    </button>
-                </li>
+                <div>
+                    <li className="auth-modal-button__item">
+                        <button
+                            onClick={handleLoginToInternetIdentity}
+                            className="auth-modal-button auth-modal-button_ii"
+                        >
+                            <span>Internet Identity</span>
+                            <img
+                                className="auth-modal-button__image"
+                                src={InternetIdentityIcon}
+                                alt="Internet Identity"
+                            />
+                        </button>
+                    </li>
+                    <li className="auth-modal-button__item auth-modal-button__item_under-construction">
+                        <button disabled className="auth-modal-button auth-modal-button_ii">
+                            <span>Plug Wallet</span>
+                            <img className="auth-modal-button__image" src={PlugIcon} alt="Internet Identity" />
+                        </button>
+                    </li>
+                </div>
             )}
         </ul>
     );

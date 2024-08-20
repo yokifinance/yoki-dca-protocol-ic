@@ -44,6 +44,18 @@
     padding: 5px;
 }
 
+.form-subtotal__element-description-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+}
+
+.form-subtotal__element-warning {
+    font-size: 10px;
+    color: rgba(145, 145, 145, 0.7);
+}
+
 .form-suntotal__element-value {
     color: rgb(255, 255, 255);
 }
@@ -56,4 +68,38 @@
     display: flex;
     align-items: center;
     gap: 8px;
+}
+
+.form-subtotal__element_total {
+    flex-direction: column;
+    height: auto;
+    background-color: rgba(19, 21, 22, 0.751);
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    grid-template-rows: repeat(3, 1fr);
+    grid-column-gap: 0px;
+    grid-row-gap: 8px;
+}
+
+.form-subtotal__element-sub-container_total-to-buy {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+}
+
+.form-subtotal__element-description-container_result {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    align-items: center;
+}
+
+.form-subtotal__result {
+    margin-top: 10px;
+    margin-left: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
 }
