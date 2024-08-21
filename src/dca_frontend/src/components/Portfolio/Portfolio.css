@@ -109,3 +109,17 @@
     border-radius: 5px;
     background-color: rgba(255, 255, 255, 0.318);
 }
+
+.portfolio_is-not-connected {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.portfolio-item_is-not-connected {
+    width: max-content;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.825);
+}

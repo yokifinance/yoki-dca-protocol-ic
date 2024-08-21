@@ -91,54 +91,60 @@ const Portfolio: React.FC<PortfolioProps> = ({ onDetailsClick }) => {
     // const countTotalAmount = ()
 
     return (
-        <ul className="portfolio">
-            {positions.map((item, index) => (
-                <li className="portfolio-item" key={index}>
-                    <div className="portfolio-item__status-container">
-                        <div className="portfolio-item__status-sub-container">
-                            <img
-                                className="portfolio-item__status-icon"
-                                src={getCurrentStatus(item.purchasesLeft) ? doneIcon : inProgressIcon}
-                                alt="Internet Identity"
-                            />
-                            <span className="portfolio-item__value">{Object.keys(item.frequency)[0]}</span>
-                        </div>
-                        <span className="portfolio-item__warn-description">
-                            {getCurrentStatus(item.purchasesLeft) ? "Done" : "In progress"}
-                        </span>
-                    </div>
-                    <div className="portfolio-item__container">
-                        <div className="portfolio-item__sub-container">
-                            <span className="portfolio-item__key">Purchases left:</span>
-                            <div className="portfolio-item__details-container">
-                                <span className="portfolio-item__value">{item.purchasesLeft.toString()}</span>
-                            </div>
-                        </div>
-                        <div className="portfolio-item__sub-container">
-                            <span className="portfolio-item__key">Amount to sale:</span>
-                            <div className="portfolio-item__details-container">
-                                <span className="portfolio-item__value">{castAmounts(item.amountToSell)} ICP</span>
-                                <img className="portfolio-item__image" src={icpIcon} alt="Internet Identity" />
-                            </div>
-                        </div>
-                        <div className="portfolio-item__sub-container">
-                            <span className="portfolio-item__key">Total tokens bought:</span>
-                            <div className="portfolio-item__details-container">
-                                <span className="portfolio-item__value">1000 BTC</span>
-                                <img className="portfolio-item__image" src={ckBTCIcon} alt="Internet Identity" />
-                            </div>
-                        </div>
-                    </div>
-                    <button className="portfolio-item__button" onClick={() => handleButtonClick(index)}>
-                        ⋮
-                        {showPopup && selectedItem === index && (
-                            <div className="portfolio-item__popup">
-                                <div onClick={handleClosePosition}>Close position</div>
-                            </div>
-                        )}
-                    </button>
+        <ul className={`portfolio ${!isConnected ? "portfolio_is-not-connected" : ""}`}>
+            {!isConnected ? (
+                <li className="portfolio-item portfolio-item_is-not-connected">
+                    Connect wallet first and create contract
                 </li>
-            ))}
+            ) : (
+                positions.map((item: Position, index: number) => (
+                    <li className="portfolio-item" key={index}>
+                        <div className="portfolio-item__status-container">
+                            <div className="portfolio-item__status-sub-container">
+                                <img
+                                    className="portfolio-item__status-icon"
+                                    src={getCurrentStatus(item.purchasesLeft) ? doneIcon : inProgressIcon}
+                                    alt="Internet Identity"
+                                />
+                                <span className="portfolio-item__value">{Object.keys(item.frequency)[0]}</span>
+                            </div>
+                            <span className="portfolio-item__warn-description">
+                                {getCurrentStatus(item.purchasesLeft) ? "Done" : "In progress"}
+                            </span>
+                        </div>
+                        <div className="portfolio-item__container">
+                            <div className="portfolio-item__sub-container">
+                                <span className="portfolio-item__key">Purchases left:</span>
+                                <div className="portfolio-item__details-container">
+                                    <span className="portfolio-item__value">{item.purchasesLeft.toString()}</span>
+                                </div>
+                            </div>
+                            <div className="portfolio-item__sub-container">
+                                <span className="portfolio-item__key">Amount to sale:</span>
+                                <div className="portfolio-item__details-container">
+                                    <span className="portfolio-item__value">{castAmounts(item.amountToSell)} ICP</span>
+                                    <img className="portfolio-item__image" src={icpIcon} alt="Internet Identity" />
+                                </div>
+                            </div>
+                            <div className="portfolio-item__sub-container">
+                                <span className="portfolio-item__key">Total tokens bought:</span>
+                                <div className="portfolio-item__details-container">
+                                    <span className="portfolio-item__value">1000 BTC</span>
+                                    <img className="portfolio-item__image" src={ckBTCIcon} alt="Internet Identity" />
+                                </div>
+                            </div>
+                        </div>
+                        <button className="portfolio-item__button" onClick={() => handleButtonClick(index)}>
+                            ⋮
+                            {showPopup && selectedItem === index && (
+                                <div className="portfolio-item__popup">
+                                    <div onClick={handleClosePosition}>Close position</div>
+                                </div>
+                            )}
+                        </button>
+                    </li>
+                ))
+            )}
         </ul>
     );
 };
