@@ -70,3 +70,19 @@
     justify-content: space-between;
     margin-top: 10px;
 }
+
+@media screen and (max-width: 600px) {
+    .footer__container {
+        flex-direction: column;
+    }
+
+    .footer__column {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .footer__social-list {
+        display: flex;
+        flex-direction: column;
+    }
+}

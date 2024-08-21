@@ -10,3 +10,9 @@
     grid-area: 1 / 2 / 2 / 3;
     height: 520px;
 }
+
+@media screen and (max-width: 600px) {
+    .form-container {
+        width: min-content;
+    }
+}
