@@ -33,3 +33,7 @@
     color: white;
     background-color: rgb(224, 67, 67);
 }
+
+.auth-modal-button_plug {
+    cursor: default;
+}

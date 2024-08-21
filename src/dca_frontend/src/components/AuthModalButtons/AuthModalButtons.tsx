@@ -76,7 +76,7 @@ const AuthModalButtons: React.FC = () => {
                     </button>
                 </li>
             ) : (
-                <div>
+                <>
                     <li className="auth-modal-button__item">
                         <button
                             onClick={handleLoginToInternetIdentity}
@@ -91,12 +91,12 @@ const AuthModalButtons: React.FC = () => {
                         </button>
                     </li>
                     <li className="auth-modal-button__item auth-modal-button__item_under-construction">
-                        <button disabled className="auth-modal-button auth-modal-button_ii">
+                        <button disabled className="auth-modal-button auth-modal-button_plug">
                             <span>Plug Wallet</span>
-                            <img className="auth-modal-button__image" src={PlugIcon} alt="Internet Identity" />
+                            <img className="auth-modal-button__image" src={PlugIcon} alt="Plug Wallet" />
                         </button>
                     </li>
-                </div>
+                </>
             )}
         </ul>
     );

@@ -3,6 +3,7 @@ import { useAuth } from "../../context/AuthContext";
 import "./WalletButton.css";
 import Popup from "../Popup/Popup";
 import AuthModalButtons from "../AuthModalButtons/AuthModalButtons";
+import WalletInfo from "../WalletInfo/WalletInfo";
 
 const WalletButton: React.FC = () => {
     const { identity, authClient } = useAuth();
@@ -33,6 +34,7 @@ const WalletButton: React.FC = () => {
                 </button>
             </div>
             <Popup isOpen={isPopupOpen} onClose={handleClosePopup}>
+                <WalletInfo principalId={principalId} />
                 <AuthModalButtons />
             </Popup>
         </>

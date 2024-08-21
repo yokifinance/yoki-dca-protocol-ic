@@ -45,6 +45,7 @@
 .portfolio-item__status-container {
     display: flex;
     flex-direction: column;
+    width: 81px;
 }
 
 .portfolio-item__status-sub-container {
