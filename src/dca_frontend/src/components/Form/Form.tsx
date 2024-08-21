@@ -117,7 +117,7 @@ const Form: React.FC<FormProps> = ({ isWalletConnected }) => {
                     />
                 </div>
 
-                {/* {isConnected ? (
+                {isConnected ? (
                     <SubmitButton
                         isWalletConnected={isWalletConnected}
                         disabled={!isFormValid}
@@ -131,8 +131,8 @@ const Form: React.FC<FormProps> = ({ isWalletConnected }) => {
                     ></SubmitButton>
                 ) : (
                     <ConnectWalletButton />
-                )} */}
-                <SubmitButton
+                )}
+                {/* <SubmitButton
                     isWalletConnected={isWalletConnected}
                     disabled={!isFormValid}
                     buyOption={"ckBTC"}
@@ -142,7 +142,7 @@ const Form: React.FC<FormProps> = ({ isWalletConnected }) => {
                     amount={amountToSell}
                     isFormValid={isFormValid}
                     tst={handleSubmitForm}
-                ></SubmitButton>
+                ></SubmitButton> */}
             </form>
         </>
     );

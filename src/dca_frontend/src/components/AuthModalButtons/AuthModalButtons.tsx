@@ -67,62 +67,8 @@ const AuthModalButtons: React.FC = () => {
         }
     };
 
-    const handleOpenPositionMethod = async () => {
-        const position = {
-            tokenToSell: Principal.fromText(whitelist[2]),
-            beneficiary: principal,
-            tokenToBuy: Principal.fromText(whitelist[3]),
-            lastPurchaseResult: [],
-            nextRunTime: [],
-            amountToSell: 10_000,
-            frequency: { Daily: null },
-            purchasesLeft: 100,
-        };
-
-        try {
-            const op = await actorBackend.openPosition(position);
-            console.log(op);
-        } catch (error) {
-            console.log(error);
-        }
-    };
-
-    const handelGetAllPosition = async () => {
-        try {
-            const pos = await actorBackend.getAllPositions();
-            console.log(pos);
-        } catch (error) {
-            console.log(error);
-        }
-    };
-
-    const handleGetPositon = async () => {
-        try {
-            const id: bigint = BigInt(1);
-            const pos = await actorBackend.getPosition(id);
-            console.log(pos);
-        } catch (error) {
-            console.log(error);
-        }
-    };
-
     return (
         <ul className="auth-modal-buttons__list">
-            {/* <li>
-                <button onClick={handleOpenPositionMethod} className="auth-modal-button auth-modal-button_openposition">
-                    <span>open Position</span>
-                </button>
-            </li>
-            <li>
-                <button onClick={handleGetPositon} className="auth-modal-button auth-modal-button_openposition">
-                    <span>get Position</span>
-                </button>
-            </li>
-            <li>
-                <button onClick={handelGetAllPosition} className="auth-modal-button auth-modal-button_openposition">
-                    <span>get all Position</span>
-                </button>
-            </li> */}
             {isConnected ? (
                 <li className="auth-modal-button__item">
                     <button onClick={handleLogout} className="auth-modal-button auth-modal-button_disconnect">

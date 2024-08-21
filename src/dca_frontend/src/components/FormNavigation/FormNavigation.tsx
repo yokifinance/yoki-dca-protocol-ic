@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import ConnectWalletButton from "../ConnectWalletButton/ConnectWalletButton";
 import "./FormNavigation.css";
+import { useAuth } from "../../context/AuthContext";
+import WalletButton from "../WalletButton/WalletButton";
 
 interface FormNavigationProps {
     activeFormNavigationButton: number;
@@ -8,6 +10,8 @@ interface FormNavigationProps {
 }
 
 const FormNavigation: React.FC<FormNavigationProps> = ({ activeFormNavigationButton, onFormNavigationClick }) => {
+    const { identity, authClient, isConnected } = useAuth();
+
     return (
         <div className="form-navigation">
             <ul className="form-navigation__links">
@@ -28,7 +32,7 @@ const FormNavigation: React.FC<FormNavigationProps> = ({ activeFormNavigationBut
                     <a className="form-navigation__link">Portfolio</a>
                 </li>
             </ul>
-            <ConnectWalletButton />
+            {isConnected ? <WalletButton /> : <ConnectWalletButton />}
         </div>
     );
 };

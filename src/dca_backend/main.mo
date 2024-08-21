@@ -89,7 +89,7 @@ actor class DCA() = self {
         let currentPositions: [Position] = switch (Map.get<Principal, [Position]>(positionsLedger, phash, caller)) {
             case (null) {
                 // Create new Array if it does not exist
-                [newPosition];
+                [];
             };
             case (?positions) {
                 // Use existing Array if it exists
