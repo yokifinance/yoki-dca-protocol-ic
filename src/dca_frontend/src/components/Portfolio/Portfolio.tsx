@@ -80,6 +80,20 @@ const Portfolio: React.FC<PortfolioProps> = ({ onDetailsClick }) => {
         return devidedAmount.toString();
     };
 
+    function formatTimestamp(timestamp: number): string {
+        const formattedTimestamp = Math.floor(timestamp / 1_000_000);
+        const date = new Date(formattedTimestamp);
+
+        const day = String(date.getDate()).padStart(2, "0");
+        const month = date.toLocaleString("default", { month: "long" });
+        const year = String(date.getFullYear()).slice(-2);
+
+        const hours = String(date.getHours()).padStart(2, "0");
+        const minutes = String(date.getMinutes()).padStart(2, "0");
+
+        return `${month} ${day}, ${year}, ${hours}:${minutes}`;
+    }
+
     const getCurrentStatus = (purchasesLeft: BigInt): boolean => {
         console.log(purchasesLeft);
         if (Number(purchasesLeft) > 0) {
@@ -114,12 +128,6 @@ const Portfolio: React.FC<PortfolioProps> = ({ onDetailsClick }) => {
                         </div>
                         <div className="portfolio-item__container">
                             <div className="portfolio-item__sub-container">
-                                <span className="portfolio-item__key">Purchases left:</span>
-                                <div className="portfolio-item__details-container">
-                                    <span className="portfolio-item__value">{item.purchasesLeft.toString()}</span>
-                                </div>
-                            </div>
-                            <div className="portfolio-item__sub-container">
                                 <span className="portfolio-item__key">Amount to sale:</span>
                                 <div className="portfolio-item__details-container">
                                     <span className="portfolio-item__value">{castAmounts(item.amountToSell)} ICP</span>
@@ -131,6 +139,20 @@ const Portfolio: React.FC<PortfolioProps> = ({ onDetailsClick }) => {
                                 <div className="portfolio-item__details-container">
                                     <span className="portfolio-item__value">1000 BTC</span>
                                     <img className="portfolio-item__image" src={ckBTCIcon} alt="Internet Identity" />
+                                </div>
+                            </div>
+                            <div className="portfolio-item__sub-container">
+                                <span className="portfolio-item__key">Purchases left:</span>
+                                <div className="portfolio-item__details-container">
+                                    <span className="portfolio-item__value">{item.purchasesLeft.toString()}</span>
+                                </div>
+                            </div>
+                            <div className="portfolio-item__sub-container">
+                                <span className="portfolio-item__key">Next purchase:</span>
+                                <div className="portfolio-item__details-container">
+                                    <span className="portfolio-item__value">
+                                        {formatTimestamp(Number(item.nextRunTime))}
+                                    </span>
                                 </div>
                             </div>
                         </div>
