@@ -3,7 +3,7 @@
 BACKEND_CANISTER_NAME="dca_backend"
 ENV=""
 
-# Проверяем, был ли передан аргумент --ic
+# Check if the user wants to use the Production environment
 if [[ "$1" == "--ic" ]]; then
     ENV="--ic"
 fi
