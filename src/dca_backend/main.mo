@@ -448,9 +448,6 @@ actor class DCA() = self {
 
     private func _getTimestampFromFrequency(frequency : Frequency) : Time.Time {
         switch (frequency) {
-            case (#TenMinutes) {
-                MINUTE * 10;
-            };
             case (#Daily) {
                 DAY;
             };
