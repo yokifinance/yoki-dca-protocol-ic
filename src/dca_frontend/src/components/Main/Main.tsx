@@ -7,15 +7,9 @@ import { useCalculateAmountsAndPayments } from "../../utils/useCalculateTotalAmo
 import { validateForm, FormErrors } from "../../utils/validation";
 import Portfolio from "../Portfolio/Portfolio";
 import SubscriptionDetails from "../SubscriptionDetails/SubscriptionDetails";
-import FormSubtotal from "../FormSubtotal/FormSubtotal";
 import { CryptoConvertProvider } from "../../context/CryptoConvertContext";
 
 const Main: React.FC = () => {
-    const [buyOption, setBuyOption] = useState<string>("");
-    const [sellOption, setSellOption] = useState<string>("");
-    const [frequency1, setFrequency] = useState<string>("");
-    const [endDate, setEndDate] = useState<string>("");
-    const [amount, setAmount] = useState<number>(1.0);
     const [isWalletConnected, setIsWalletConnected] = useState<boolean>(false);
     const [errors, setErrors] = useState<FormErrors>({});
     const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
@@ -34,20 +28,6 @@ const Main: React.FC = () => {
             window.removeEventListener("keydown", handleEsc);
         };
     }, []);
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSubmitted(true);
-        const formErrors = validateForm(buyOption, sellOption, amount, endDate, frequency1);
-        if (Object.keys(formErrors).length === 0) {
-            // Если нет ошибок, выполнить логику сабмита
-            console.log({ buyOption, sellOption, frequency1, endDate });
-        } else {
-            // Если есть ошибки, установить их в состояние
-            setErrors(formErrors);
-            console.log(formErrors);
-        }
-    };
 
     return (
         <CryptoConvertProvider>

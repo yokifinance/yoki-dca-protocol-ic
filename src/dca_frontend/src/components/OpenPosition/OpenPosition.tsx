@@ -39,7 +39,6 @@ const OpenPosition: React.FC<OpenPositionProps> = ({
             case "Monthly":
                 return { Monthly: null };
             default:
-                console.log(frequency);
                 throw new Error("Invalid frequency");
         }
     };

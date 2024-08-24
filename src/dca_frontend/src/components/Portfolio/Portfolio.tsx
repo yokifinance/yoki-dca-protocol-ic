@@ -23,10 +23,9 @@ const Portfolio: React.FC<PortfolioProps> = ({ onDetailsClick }) => {
                 const pos = await actorBackend.getAllPositions();
                 if (pos.ok) {
                     setPosition(pos.ok);
-                    console.log(pos.ok);
                 }
             } catch (error) {
-                console.log("Error fetching positions:", error);
+                console.warn("Error fetching positions:", error);
             }
         };
 
@@ -50,7 +49,6 @@ const Portfolio: React.FC<PortfolioProps> = ({ onDetailsClick }) => {
     };
 
     const handleButtonClick = (id: number) => {
-        console.log(`Button clicked for item with index: ${id}`);
         setSelectedItem(id);
         setShowPopup(!showPopup);
     };
@@ -58,13 +56,10 @@ const Portfolio: React.FC<PortfolioProps> = ({ onDetailsClick }) => {
     const handleClosePosition = async () => {
         if (selectedItem !== null) {
             try {
-                // Convert selectedItem to bigint
                 const indexBigInt = BigInt(selectedItem);
                 const result = await actorBackend.closePosition(indexBigInt);
 
                 if (result.ok) {
-                    console.log("Position closed successfully");
-                    // Remove the position from the list
                     setPosition((prevPositions) => prevPositions.filter((_, index) => index !== selectedItem));
                 } else {
                     console.error("Error closing position:", result.err);
@@ -95,14 +90,11 @@ const Portfolio: React.FC<PortfolioProps> = ({ onDetailsClick }) => {
     }
 
     const getCurrentStatus = (purchasesLeft: BigInt): boolean => {
-        console.log(purchasesLeft);
         if (Number(purchasesLeft) > 0) {
             return false;
         }
         return true;
     };
-
-    // const countTotalAmount = ()
 
     return (
         <ul className={`portfolio ${!isConnected ? "portfolio_is-not-connected" : ""}`}>
@@ -118,7 +110,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ onDetailsClick }) => {
                                 <img
                                     className="portfolio-item__status-icon"
                                     src={getCurrentStatus(item.purchasesLeft) ? doneIcon : inProgressIcon}
-                                    alt="Internet Identity"
+                                    alt="Subscription status"
                                 />
                                 <span className="portfolio-item__value">{Object.keys(item.frequency)[0]}</span>
                             </div>

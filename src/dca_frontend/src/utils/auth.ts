@@ -12,10 +12,8 @@ export const handlePlugConnect = async (whitelist: string[]): Promise<boolean | 
             const publicKey = await window.ic.plug.requestConnect({
                 whitelist,
             });
-            // console.log(`The connected user's public key is:`, publicKey);
 
             const principalId = await window.ic.plug.agent.getPrincipal();
-            // console.log(principalId);
             if (await checkIsPlugConnected()) {
                 return true;
             }
@@ -39,27 +37,19 @@ export const disconnectPlug = async (): Promise<void> => {
         await window.ic.plug.disconnect();
         await checkIsPlugConnected();
     } catch (error) {
-        console.log(error);
+        console.warn(error);
     }
 };
-
-//to do
-// write createActor
-// input => canisterIds, interface
-// window.ic.plug.createActor
-// return => actor (backend method)
 
 // InternetIdentity Auth
 
 export const getIdentityProvider = (): string | undefined => {
-    console.log(process.env);
     if (typeof window !== "undefined") {
         const isLocal = process.env.DFX_NETWORK !== "ic";
         const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
         if (isLocal && isSafari) {
             return `http://localhost:4943/?canisterId=${process.env.CANISTER_ID_INTERNET_IDENTITY}`;
         } else if (isLocal) {
-            console.log(`http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943`);
             return `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943`;
         } else if (!isLocal) {
             return `https://identity.ic0.app/#authorize`;
@@ -90,15 +80,28 @@ export const handleInternetIdentityAuth = async (): Promise<AuthClient | void> =
     }
 };
 
+function logCurrentPageUrl(): string {
+    return window.location.href;
+}
+
 export const createActor = async (canisterId: string, idlFactory: IDL.InterfaceFactory, identity: Identity) => {
-    const agent = new HttpAgent({ identity, host: "http://127.0.0.1:4943" });
+    let host;
+    if (process.env.DFX_NETWORK !== "local") {
+        host = logCurrentPageUrl();
+    } else {
+        host = "http://127.0.0.1:4943";
+    }
+
+    const agent = new HttpAgent({ identity, host });
 
     const actor = Actor.createActor(idlFactory, {
         agent,
         canisterId: canisterId,
     });
 
-    await agent.fetchRootKey();
+    if (process.env.DFX_NETWORK !== "local") {
+        await agent.fetchRootKey();
+    }
     return actor;
 };
 
@@ -116,8 +119,6 @@ export const checkIsInternetIdentityConnected = async (
 
 export const disconnectInternetIdentity = async (client: AuthClient) => {
     const identity = await client.getIdentity();
-    const pr = await identity.getPrincipal().toString();
-    console.log(pr);
     await client.logout();
 };
 
@@ -144,11 +145,10 @@ export const handleOpenPosition = async (
     try {
         if (actor.openPosition && principal) {
             const op = await actor.openPosition(position);
-            console.log(op);
             return op;
         }
     } catch (error) {
-        console.log(error);
+        console.warn(error);
         throw error;
     }
 };
