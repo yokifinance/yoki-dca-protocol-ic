@@ -18,7 +18,11 @@ const Footer: React.FC = () => {
                     <h4 className="footer__column-title">Docs</h4>
                     <ul className="footer__link-list">
                         <li className="footer__link">
-                            <a href="https://github.com/yokifinance/yoki-dca-protocol-ic" className="footer__link">
+                            <a
+                                href="https://github.com/yokifinance/yoki-dca-protocol-ic"
+                                target="_blank"
+                                className="footer__link"
+                            >
                                 <img className="footer__link-icon" src={gitHubIcon} alt="Internet Identity" />
                                 <span className="footer__link-description">GitHub</span>
                             </a>
@@ -32,19 +36,24 @@ const Footer: React.FC = () => {
                             <a
                                 href="https://oc.app/favourite/group/a3kje-taaaa-aaaar-bjgtq-cai"
                                 className="footer__link"
+                                target="_blank"
                             >
                                 <img className="footer__link-icon" src={openChatLogo} alt="Internet Identity" />
                                 <span className="footer__link-description">OpenChat</span>
                             </a>
                         </li>
                         <li className="footer__link">
-                            <a href="https://github.com/yokifinance/yoki-dca-protocol-ic" className="footer__link">
+                            <a
+                                href="https://github.com/yokifinance/yoki-dca-protocol-ic"
+                                target="_blank"
+                                className="footer__link"
+                            >
                                 <img className="footer__link-icon" src={telegramLogo} alt="Internet Identity" />
                                 <span className="footer__link-description">Telegram</span>
                             </a>
                         </li>
                         <li className="footer__link">
-                            <a href="https://x.com/icspore" className="footer__link">
+                            <a href="https://x.com/icspore" target="_blank" className="footer__link">
                                 <img className="footer__link-icon" src={xLogo} alt="Internet Identity" />
                                 <span className="footer__link-description">x.com</span>
                             </a>
