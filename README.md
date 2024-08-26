@@ -72,11 +72,9 @@ Right after creation, your position will be executed for the first time (usually
 
 ### Step 1. Deploying ICP Ledger and ckBTC Ledger
 
+##### Edit deploy_local.sh to change DEFAULT_IDENTITY to your identity before run
 ```bash
-bash scripts/deploy_icp_ledger.sh
-```
-```bash
-bash scripts/deploy_icrc1_ledger.sh
+bash scripts/deploy_local.sh
 ```
 ### Step 2. deploy **dca_backend** canister
 ```bash
