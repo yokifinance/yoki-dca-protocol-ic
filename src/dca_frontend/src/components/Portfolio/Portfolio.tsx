@@ -129,13 +129,13 @@ const Portfolio: React.FC<PortfolioProps> = ({ onDetailsClick }) => {
                                     <img className="portfolio-item__image" src={icpIcon} alt="Internet Identity" />
                                 </div>
                             </div>
-                            <div className="portfolio-item__sub-container">
+                            {/* <div className="portfolio-item__sub-container">
                                 <span className="portfolio-item__key">Total tokens bought:</span>
                                 <div className="portfolio-item__details-container">
                                     <span className="portfolio-item__value">1000 BTC</span>
                                     <img className="portfolio-item__image" src={ckBTCIcon} alt="Internet Identity" />
                                 </div>
-                            </div>
+                            </div> */}
                             <div className="portfolio-item__sub-container">
                                 <span className="portfolio-item__key">Purchases left:</span>
                                 <div className="portfolio-item__details-container">
