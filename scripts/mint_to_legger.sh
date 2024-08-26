@@ -6,6 +6,6 @@ dfx identity use artem
 dfx canister call icp_ledger_canister icrc1_transfer "(record 
     { to = 
         record { owner = principal \"${II_PRINCIPAL}\"; subaccount = null }; 
-    amount = 1_00_000_000 
+    amount = 3_00_000_000 
     }
 )"

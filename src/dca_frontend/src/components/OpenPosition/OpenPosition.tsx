@@ -47,26 +47,24 @@ const OpenPosition: React.FC<OpenPositionProps> = ({
         setIsSubmitting(true);
 
         try {
-            // const totalPurchasesAmmount = (amount * 100000000 + 10_000) * numberOfPayments;
+            const totalPurchasesAmmount = (amount * 10000000000000000 + 10_000) * numberOfPayments;
 
-            // const approveArgs = {
-            //     amount: totalPurchasesAmmount,
-            //     spender: {
-            //         owner: backendPrincipal,
-            //         subaccount: [],
-            //     },
-            //     fee: [],
-            //     memo: [],
-            //     from_subaccount: [],
-            //     created_at_time: [],
-            //     expected_allowance: [],
-            //     expires_at: [],
-            // };
+            const approveArgs = {
+                amount: totalPurchasesAmmount,
+                spender: {
+                    owner: Principal.fromText(whitelist[1]),
+                    subaccount: [],
+                },
+                fee: [],
+                memo: [],
+                from_subaccount: [],
+                created_at_time: [],
+                expected_allowance: [],
+                expires_at: [],
+            };
 
-            // const approve = await actorLedger.icrc2_approve(approveArgs);
-            const approve = { ok: true };
-
-            if (approve.ok) {
+            const approve = await actorLedger.icrc2_approve(approveArgs);
+            if (approve.Ok) {
                 const mappedFrequency = mapToFrequency(frequency);
                 const response = await handleOpenPosition(
                     actorBackend,

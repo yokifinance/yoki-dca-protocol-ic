@@ -76,6 +76,9 @@ const Portfolio: React.FC<PortfolioProps> = ({ onDetailsClick }) => {
     };
 
     function formatTimestamp(timestamp: number): string {
+        if (timestamp === 0) {
+            return "In a few minutes";
+        }
         const formattedTimestamp = Math.floor(timestamp / 1_000_000);
         const date = new Date(formattedTimestamp);
 
