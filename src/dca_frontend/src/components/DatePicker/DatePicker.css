@@ -1,0 +1,17 @@
+.date-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.date-picker__label {
+    font-size: 18px;
+}
+
+.date-picker__input {
+    border: none;
+    border-radius: 5px;
+    height: 45px;
+    font-size: 20px;
+    padding: 0 10px;
+}

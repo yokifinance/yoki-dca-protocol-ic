@@ -1,0 +1,19 @@
+.nav-bar-link {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    transition: background-color 0.3s ease;
+}
+
+.nav-bar-link:hover {
+    cursor: pointer;
+    background-color: #20b9be8b;
+}
+
+.nav-bar-link__text {
+    font-weight: 400;
+    font-size: 18px;
+}

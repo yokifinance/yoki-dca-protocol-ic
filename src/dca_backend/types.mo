@@ -25,6 +25,7 @@ module {
     };
     // Define the structure of a timer
     public type Frequency = {
+        #TenMinutes;
         #Daily;
         #Weekly;
         #Monthly;

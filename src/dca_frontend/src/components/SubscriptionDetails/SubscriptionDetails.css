@@ -1,0 +1,24 @@
+.subscription-details {
+    width: 100%;
+    border-radius: 10px;
+    margin: 0 auto;
+    color: #fff;
+}
+
+.subscription-details__title {
+    margin: 0;
+    padding: 0;
+    text-align: center;
+}
+
+.subscription-details__item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    border-bottom: 1px solid #333;
+}
+
+.subscription-details__label,
+.subscription-details__value {
+    font-size: small;
+}

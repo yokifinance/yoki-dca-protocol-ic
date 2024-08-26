@@ -1,0 +1,93 @@
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 15px 10px;
+    color: rgb(201, 203, 211);
+}
+
+.select-input__container {
+    display: flex;
+    flex-direction: column;
+}
+
+.select-input__container_last {
+    padding: 0 0 20px;
+    border-bottom: 2px solid rgb(48, 50, 58);
+}
+
+.select-input__label {
+    margin-bottom: 5px;
+}
+
+.select-input__controls {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    background-color: white;
+    border-radius: 5px;
+}
+
+.select-input__input {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    flex: 1 1 30%;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+    font-size: 18px;
+}
+
+.select-input__text-field {
+    flex: 1 1 70%;
+    padding: 5px;
+    border-radius: 5px;
+    border: none;
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 18px;
+    text-align: right;
+
+    /* Убираем стрелки увеличения числа */
+    -moz-appearance: textfield; /* Для Firefox */
+    -webkit-appearance: none; /* Для Chrome, Safari, Edge */
+    appearance: none;
+
+    /* Отключаем увеличение числа скроллом */
+    overflow: hidden;
+}
+
+.select-input__text-field::-webkit-outer-spin-button,
+.select-input__text-field::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.select-input__text-field[type="number"] {
+    -moz-appearance: textfield;
+}
+
+.error {
+    border: 2px solid red;
+    border-radius: 5px;
+}
+
+.date-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 0 0 20px;
+    margin: 10px 0 10px;
+    border-bottom: 2px solid rgb(48, 50, 58);
+}
+
+.date-picker__label {
+    font-size: 18px;
+}
+
+.date-picker__input {
+    border: none;
+    border-radius: 5px;
+    height: 32px;
+    font-size: 18px;
+    padding: 0 10px;
+}

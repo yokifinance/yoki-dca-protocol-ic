@@ -1,0 +1,127 @@
+.portfolio {
+    color: #fff;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    margin: 5px 4px 0;
+}
+
+.portfolio-item {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background-color: rgb(19, 21, 22);
+
+    border: 1px solid rgb(48, 50, 58);
+    border-radius: 16px;
+    margin-bottom: 5px;
+}
+
+.portfolio-item__status-icon {
+    width: 20px;
+    height: 20px;
+}
+
+.portfolio-item__image {
+    width: 12px;
+    height: 12px;
+}
+
+.portfolio-item__container {
+    display: flex;
+    flex-direction: column;
+    font-size: 13px;
+    gap: 8px;
+    align-items: flex-start;
+}
+
+.portfolio-item__key {
+    font-size: 13px;
+    color: rgba(173, 173, 173, 0.98);
+}
+
+.portfolio-item__status-container {
+    display: flex;
+    flex-direction: column;
+    width: 81px;
+}
+
+.portfolio-item__status-sub-container {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    align-items: center;
+}
+
+.portfolio-item__sub-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: max-content;
+    justify-content: space-between;
+    gap: 20px;
+    width: 100%;
+}
+
+.portfolio-item__details-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+}
+
+.portfolio-item__warn-description {
+    margin: 4px 0 0;
+    padding: 0;
+    font-size: 10px;
+    color: rgba(145, 145, 145, 0.7);
+    align-self: center;
+}
+
+.portfolio-item__button {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.portfolio-item__popup {
+    width: max-content;
+    position: absolute;
+    background: rgba(75, 60, 60, 0.878);
+    border-radius: 5px;
+    pad: 10px 0;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    z-index: 10;
+    color: rgba(255, 255, 255, 0.825);
+    display: flex;
+    flex-direction: column;
+    font-size: 15px;
+}
+
+.portfolio-item__popup > div {
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.portfolio-item__popup > div:hover {
+    border-radius: 5px;
+    background-color: rgba(255, 255, 255, 0.318);
+}
+
+.portfolio_is-not-connected {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.portfolio-item_is-not-connected {
+    width: max-content;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.825);
+}
