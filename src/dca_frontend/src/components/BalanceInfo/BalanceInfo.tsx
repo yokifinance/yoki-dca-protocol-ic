@@ -19,7 +19,6 @@ const BalanceInfo: React.FC = () => {
     };
 
     useEffect(() => {
-        console.log(isConnected, actorLedger, principal);
         fetchBalance();
     }, [isConnected, actorLedger, principal]);
 
