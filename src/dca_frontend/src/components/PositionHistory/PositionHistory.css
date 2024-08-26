@@ -1,0 +1,81 @@
+.position-history {
+    display: flex;
+    flex-direction: column;
+    margin: 5px 4px 0;
+    color: rgba(255, 255, 255, 0.875);
+}
+
+.position-history__container {
+    display: flex;
+    flex-direction: column;
+    padding: 10px 15px;
+    background-color: rgb(19, 21, 22);
+    border: 1px solid rgb(48, 50, 58);
+    border-radius: 16px;
+    margin-bottom: 5px;
+}
+
+.position-history__field-description {
+    margin: 0;
+    padding: 0;
+}
+
+.purchase-history__list {
+    display: flex;
+    flex-direction: column;
+    list-style: none;
+    margin: 10px 0 0;
+    padding: 0px;
+    font-size: 13px;
+    gap: 5px;
+}
+
+.position-history__item {
+    border: 2px solid rgb(48, 50, 58);
+    border-radius: 4px;
+    padding: 5px;
+}
+
+.position-history__item:has(.position-history__item_error) {
+    background: rgb(201, 32, 57);
+    background: linear-gradient(
+        162deg,
+        rgba(201, 32, 57, 0.6965379901960784) 35%,
+        rgba(238, 86, 18, 0.702140231092437) 79%
+    );
+}
+
+.position-history__item:has(.position-history__item_ok) {
+    background: rgb(77, 212, 171);
+    background: linear-gradient(162deg, rgba(77, 212, 171, 0.7) 54%, rgba(77, 212, 171, 1) 98%);
+}
+
+.position-history__title {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.position-history__back-button {
+    width: max-content;
+    margin: 10px 0 5px;
+    padding: 4px;
+    color: rgba(255, 255, 255, 0.95);
+    background-color: rgb(19, 21, 22);
+
+    border: 2px solid rgb(48, 50, 58);
+    border-radius: 4px;
+    transition: color 0.3s;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 5px;
+}
+
+.position-history__back-button:hover {
+    color: rgb(77, 212, 171);
+}
+
+.position-history__back-icon {
+    width: 15px;
+    height: 15px;
+}
