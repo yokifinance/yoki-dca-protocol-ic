@@ -8,13 +8,86 @@ import { validateForm, FormErrors } from "../../utils/validation";
 import Portfolio from "../Portfolio/Portfolio";
 import SubscriptionDetails from "../SubscriptionDetails/SubscriptionDetails";
 import { CryptoConvertProvider } from "../../context/CryptoConvertContext";
+import { useAuth } from "../../context/AuthContext";
+
+import {
+    handleInternetIdentityAuth,
+    createActor,
+    disconnectInternetIdentity,
+    checkIsInternetIdentityConnected,
+} from "../../utils/auth";
+import { AuthClient, LocalStorage } from "@dfinity/auth-client";
+
+import { idlFactory as backend } from "../../../declarations/dca_backend/dca_backend.did.js";
+import { idlFactory as legger } from "../../../declarations/icp_ledger_canister/icp_ledger_canister.did.js";
 
 const Main: React.FC = () => {
+    const {
+        authClient,
+        isConnected,
+        identity,
+        principal,
+        actorBackend,
+        actorLedger,
+        whitelist,
+        setAuthClient,
+        setIsConnected,
+        setIdentity,
+        setPrincipal,
+        setActorBackend,
+        setActorLedger,
+        setWhitelist,
+    } = useAuth();
     const [isWalletConnected, setIsWalletConnected] = useState<boolean>(false);
     const [errors, setErrors] = useState<FormErrors>({});
     const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
     const [activeFormNavigationButton, setActiveFormNavigationButton] = useState<number>(0);
     const [showSubscriptionDetails, setShowSubscriptionDetails] = useState<boolean>(false);
+
+    useEffect(() => {
+        const id1 = process.env.CANISTER_ID_INTERNET_IDENTITY;
+        const id2 = process.env.CANISTER_ID_DCA_BACKEND;
+        const id3 = process.env.CANISTER_ID_ICP_LEDGER_CANISTER;
+        const id4 = process.env.CANISTER_ID_CKBTC_LEDGER_CANISTER;
+
+        const filteredWhitelist = [id1, id2, id3, id4].filter((id): id is string => !!id);
+        setWhitelist(filteredWhitelist);
+    }, [setWhitelist]);
+
+    useEffect(() => {
+        const initializeAuthClient = async () => {
+            try {
+                // Создание AuthClient
+                const authClient = await AuthClient.create({
+                    storage: new LocalStorage(),
+                    keyType: "Ed25519",
+                    idleOptions: {
+                        idleTimeout: 1000 * 60 * 30, // 30 минут
+                        disableDefaultIdleCallback: true,
+                    },
+                });
+
+                // Проверка состояния подключения и настройка контекста
+                const isAuthenticated = await authClient.isAuthenticated(); // Ожидаем результат
+                if (isAuthenticated) {
+                    const identity = authClient.getIdentity();
+                    setIsConnected(true);
+                    setAuthClient(authClient);
+                    setPrincipal(identity.getPrincipal());
+                    setIdentity(identity);
+
+                    const actorBackend = await createActor(whitelist[1], backend, identity);
+                    const actorLedger = await createActor(whitelist[2], legger, identity);
+                    setActorBackend(actorBackend);
+                    setActorLedger(actorLedger);
+                }
+            } catch (error) {
+                console.error("Ошибка при инициализации AuthClient:", error);
+            }
+        };
+
+        initializeAuthClient();
+    }, [setAuthClient, setIsConnected, setIdentity, setPrincipal, setActorBackend, setActorLedger, whitelist]);
 
     useEffect(() => {
         const handleEsc = (event: KeyboardEvent) => {
