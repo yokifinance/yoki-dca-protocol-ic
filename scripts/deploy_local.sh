@@ -4,7 +4,8 @@ set -x
 dfx start --background --clean
 
 # Create identities and canister arguments
-DEFAULT_IDENTITY=artem
+
+DEFAULT_IDENTITY=Your-Identity-Name
 
 dfx identity new minter
 dfx identity use minter
@@ -73,7 +74,3 @@ record {
      };
  }
 })"
-
-
-
-
