@@ -1,7 +1,7 @@
 set -x
 
 ## Transfer some ICP tokens to II Priccipal
-II_PRINCIPAL="foayp-ihjk4-ity6h-3b6oz-3yvdy-lzqp5-y2xnf-ggf2h-qhlo3-cnc2a-6qe"
+II_PRINCIPAL="5whpp-p2ree-gb5r6-f3wuz-7ctgy-7z47n-qjhvx-wsg7b-ftcpq-eiyhe-iqe"
 dfx identity use artem
 dfx canister call icp_ledger_canister icrc1_transfer "(record 
     { to = 
