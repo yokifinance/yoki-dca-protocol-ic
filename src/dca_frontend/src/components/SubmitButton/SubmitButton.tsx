@@ -89,6 +89,7 @@ const SubmitButton: React.FC<SubmitButtonProps> = ({
                     amount={amount}
                     onClose={handleClosePopup}
                     numberOfPayments={numberOfPayments}
+                    isPopupOpen={isPopupOpen}
                 >
                     <FormSubtotal
                         buyOption={"ckBTC"}

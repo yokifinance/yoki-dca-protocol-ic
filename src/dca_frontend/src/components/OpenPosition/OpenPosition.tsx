@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./OpenPosition.css";
 import { handleOpenPosition } from "../../utils/auth";
 import { Position, Frequency } from "../../../declarations/dca_backend/dca_backend.did.js";
@@ -14,6 +14,7 @@ interface OpenPositionProps {
     amount: number;
     onClose: () => void;
     numberOfPayments: number;
+    isPopupOpen: boolean;
 }
 
 const OpenPosition: React.FC<OpenPositionProps> = ({
@@ -25,10 +26,12 @@ const OpenPosition: React.FC<OpenPositionProps> = ({
     amount,
     onClose,
     numberOfPayments,
+    isPopupOpen,
 }) => {
     const { isConnected, actorBackend, actorLedger, whitelist, principal } = useAuth();
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
     const [isPositionCreated, setIsPositionCreated] = useState<boolean>(false);
+    const [isApproveError, setIsApproveError] = useState<boolean>(false);
 
     const mapToFrequency = (frequency: string): Frequency => {
         switch (frequency) {
@@ -43,11 +46,15 @@ const OpenPosition: React.FC<OpenPositionProps> = ({
         }
     };
 
+    useEffect(() => {
+        setIsApproveError(false);
+    }, [isPopupOpen]);
+
     const openPosition = async () => {
         setIsSubmitting(true);
 
         try {
-            const totalPurchasesAmmount = (amount * 10000000000000000 + 10_000) * numberOfPayments;
+            const totalPurchasesAmmount = (amount * 100000000 + 10_000) * numberOfPayments;
 
             const approveArgs = {
                 amount: totalPurchasesAmmount,
@@ -74,11 +81,16 @@ const OpenPosition: React.FC<OpenPositionProps> = ({
                     mappedFrequency,
                     BigInt(numberOfPayments)
                 );
-                if (response.ok !== undefined) {
+                if (response.ok) {
                     setIsPositionCreated(true);
+                    setIsApproveError(false);
+                } else if (response.err) {
+                    setIsApproveError(true);
                 }
             }
         } catch (error) {
+            setIsPositionCreated(false);
+            setIsApproveError(true);
             console.error(error);
         } finally {
             setIsSubmitting(false);
@@ -90,8 +102,9 @@ const OpenPosition: React.FC<OpenPositionProps> = ({
             <p className="open-position__description">Once confirmed, this subscription will be created:</p>
             <div className="open-position__children">{children}</div>
             <p className="open-position__warn-text">Your first purchase will proceed right away</p>
+            {isApproveError && <p className="open-position__error-message">Approve not received</p>}
             <ul className="open-position__buttons">
-                <li className="open-position__button open-position__button_approve">
+                <li className={`open-position__button open-position__button_approve ${isApproveError ? "error" : ""}`}>
                     <button onClick={openPosition} disabled={isSubmitting}>
                         {isPositionCreated ? "Position created" : isSubmitting ? "Creating..." : "Create subscription"}
                     </button>
