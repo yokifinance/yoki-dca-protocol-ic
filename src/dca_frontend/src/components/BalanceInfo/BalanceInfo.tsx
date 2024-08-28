@@ -32,7 +32,7 @@ const BalanceInfo: React.FC = () => {
 
     return (
         <div className="balance-info">
-            <span className="balance-info__description">Minimum amount equals 1 ICP</span>
+            <span className="balance-info__description">Minimum amount equals 0.1 ICP</span>
             <span className="balance-info__description">In wallet: {balance !== null ? `${balance} ICP` : "-"} </span>
         </div>
     );

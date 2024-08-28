@@ -107,11 +107,12 @@ const Form: React.FC<FormProps> = ({ isWalletConnected }) => {
                         <input
                             className="select-input__text-field"
                             type="number"
-                            min={1}
+                            min={0.1}
                             ref={amountToSellRef}
                             placeholder="Amount"
                             value={amountToSell !== undefined ? amountToSell : 0}
                             onChange={handleAmountChange}
+                            onInvalid={(e) => e.preventDefault()}
                         />
                     </div>
                     <BalanceInfo />
