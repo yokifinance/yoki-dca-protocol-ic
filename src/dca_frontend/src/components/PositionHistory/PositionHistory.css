@@ -45,7 +45,7 @@
     );
 }
 
-.position-history__item:has(.position-history__item_ok) {
+.position-history__item:has(.position-history__item_success) {
     background: rgb(77, 212, 171);
     background: linear-gradient(162deg, rgba(77, 212, 171, 0.7) 54%, rgba(77, 212, 171, 1) 98%);
 }
