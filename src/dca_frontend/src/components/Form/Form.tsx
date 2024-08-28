@@ -5,15 +5,17 @@ import ConnectWalletButton from "../ConnectWalletButton/ConnectWalletButton";
 import { useAuth } from "../../context/AuthContext";
 import RadioButtons from "../RadioButtons/RadioButtons";
 import BalanceInfo from "../BalanceInfo/BalanceInfo";
-import { differenceInDays, parseISO } from "date-fns";
+import DropDownList from "../DropDownList/DropDownList";
+import icpIcon from "../../images/icp-rounded.svg";
+import ckUSDCIcon from "../../images/ckUSDC.svg";
+import ckUSDTIcon from "../../images/ckUSDT.svg";
+
+import ckBTCIcon from "../../images/ckBTC.svg";
+import ckETHIcon from "../../images/ckETH.svg";
+import CHATIcon from "../../images/spinner.svg";
 
 interface FormProps {
     isWalletConnected: boolean;
-}
-
-interface CalculatedValues {
-    totalAmount: number;
-    numberOfPayments: number;
 }
 
 const Form: React.FC<FormProps> = ({ isWalletConnected }) => {
@@ -23,14 +25,15 @@ const Form: React.FC<FormProps> = ({ isWalletConnected }) => {
     const [isFormValid, setIsFormValid] = useState<boolean>(false);
     const [amountToSell, setAmountToSell] = useState<number>(1.0);
 
-    const tokenToBuyRef = useRef<HTMLSelectElement>(null);
-    const tokenToSellRef = useRef<HTMLSelectElement>(null);
     const amountToSellRef = useRef<HTMLInputElement>(null);
     const frequencyRef = useRef<{ getFrequency: () => string }>(null);
 
+    const [selectedSellToken, setSelectedSellToken] = useState<string | null>(null);
+    const [selectedBuyToken, setSelectedBuyToken] = useState<string | null>(null);
+
     useEffect(() => {
         validateForm();
-    }, [endDate, amountToSell, frequencyRef]);
+    }, [endDate, amountToSell, frequencyRef, selectedSellToken, selectedBuyToken]);
 
     const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.valueAsNumber;
@@ -46,13 +49,32 @@ const Form: React.FC<FormProps> = ({ isWalletConnected }) => {
         const isAmountValid = amountToSell > 0;
         const isFrequencyValid = frequencyRef.current?.getFrequency();
         const isEndDateValid = endDate !== "";
+        const isSellTokenValid = selectedSellToken !== null;
+        const isBuyTokenValid = selectedBuyToken !== null;
 
-        setIsFormValid(!!isAmountValid && !!isFrequencyValid && !!isEndDateValid);
+        setIsFormValid(isAmountValid && !!isFrequencyValid && isEndDateValid && isSellTokenValid && isBuyTokenValid);
     };
 
     const handleSubmitForm = (e: React.FormEvent) => {
         e.preventDefault();
     };
+
+    const optionsToSell = [
+        { label: "ICP", value: "ICP", icon: <img className="" src={icpIcon} alt="ICP Icon" />, available: true },
+        { label: "ckUSDT", value: "ckUSDT", icon: <img src={ckUSDTIcon} alt="ckUSDT Icon" />, available: false },
+        { label: "ckUSDC", value: "ckUSDC", icon: <img src={ckUSDCIcon} alt="ckUSDC Icon" />, available: false },
+    ];
+
+    const optionsToBuy = [
+        {
+            label: "ckBTC",
+            value: "ckBTC",
+            icon: <img className="" src={ckBTCIcon} alt="ckBTC Icon" />,
+            available: true,
+        },
+        { label: "ckETH", value: "ckETH", icon: <img src={ckETHIcon} alt="ckETH Icon" />, available: false },
+        { label: "CHAT", value: "CHAT", icon: <img src={CHATIcon} alt="CHAT Icon" />, available: false },
+    ];
 
     return (
         <>
@@ -61,16 +83,13 @@ const Form: React.FC<FormProps> = ({ isWalletConnected }) => {
                     <label htmlFor="buy" className="select-input__label">
                         You buy:
                     </label>
-                    <select id="buy" className="select-input__input" ref={tokenToBuyRef}>
-                        <option value="" disabled>
-                            Select token
-                        </option>
-                        {["BTC"].map((option) => (
-                            <option key={option} value={option}>
-                                {option}
-                            </option>
-                        ))}
-                    </select>
+                    <DropDownList
+                        selectedOption={selectedBuyToken}
+                        onChange={setSelectedBuyToken} // Применение состояния для выбора токена на покупку
+                        options={optionsToBuy}
+                        buttonTitle="Select token"
+                        width="100%"
+                    />
                 </div>
 
                 <div className="select-input__container select-input__container_last">
@@ -78,16 +97,13 @@ const Form: React.FC<FormProps> = ({ isWalletConnected }) => {
                         You sell:
                     </label>
                     <div className="select-input__controls">
-                        <select id="sell" className="select-input__input" ref={tokenToSellRef}>
-                            <option value="" disabled>
-                                Select token
-                            </option>
-                            {["ICP"].map((option) => (
-                                <option key={option} value={option}>
-                                    {option}
-                                </option>
-                            ))}
-                        </select>
+                        <DropDownList
+                            selectedOption={selectedSellToken}
+                            onChange={setSelectedSellToken} // Применение состояния для выбора токена на продажу
+                            options={optionsToSell}
+                            buttonTitle="Select token"
+                            width="40%"
+                        />
                         <input
                             className="select-input__text-field"
                             type="number"
@@ -132,17 +148,6 @@ const Form: React.FC<FormProps> = ({ isWalletConnected }) => {
                 ) : (
                     <ConnectWalletButton />
                 )}
-                {/* <SubmitButton
-                    isWalletConnected={isWalletConnected}
-                    disabled={!isFormValid}
-                    buyOption={"ckBTC"}
-                    sellOption={"ICP"}
-                    frequency={frequencyRef.current?.getFrequency() || ""}
-                    endDate={endDate}
-                    amount={amountToSell}
-                    isFormValid={isFormValid}
-                    tst={handleSubmitForm}
-                ></SubmitButton> */}
             </form>
         </>
     );

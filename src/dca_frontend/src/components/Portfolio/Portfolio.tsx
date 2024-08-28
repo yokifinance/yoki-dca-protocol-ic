@@ -7,6 +7,7 @@ import { useCryptoConvert } from "../../context/CryptoConvertContext";
 import ckBTCIcon from "../../images/ckBTC.svg";
 import inProgressIcon from "../../images/repeat-svgrepo-com.svg";
 import doneIcon from "../../images/checkmark-xs-svgrepo-com.svg";
+import PositionHistory from "../PositionHistory/PositionHistory"; // Импорт нового компонента
 
 interface PortfolioProps {
     onDetailsClick: () => void;
@@ -15,6 +16,8 @@ interface PortfolioProps {
 const Portfolio: React.FC<PortfolioProps> = ({ onDetailsClick }) => {
     const { isConnected, actorBackend } = useAuth();
     const [positions, setPosition] = useState<Position[]>([]);
+    const [showHistory, setShowHistory] = useState<boolean>(false); // Новое состояние для управления показом истории
+    const [currentItem, setCurrentItem] = useState<Position | null>(null); // Состояние для хранения текущего элемента
     const convert = useCryptoConvert();
 
     useEffect(() => {
@@ -70,6 +73,13 @@ const Portfolio: React.FC<PortfolioProps> = ({ onDetailsClick }) => {
         }
     };
 
+    const handleCheckHistory = () => {
+        if (selectedItem !== null) {
+            setCurrentItem(positions[selectedItem]);
+            setShowHistory(true);
+        }
+    };
+
     const castAmounts = (amount: BigInt): string => {
         const devidedAmount = Number(amount) / 100000000;
         return devidedAmount.toString();
@@ -98,6 +108,18 @@ const Portfolio: React.FC<PortfolioProps> = ({ onDetailsClick }) => {
         }
         return true;
     };
+
+    if (showHistory && currentItem) {
+        return (
+            <PositionHistory
+                item={currentItem}
+                amountToSell={castAmounts(currentItem.amountToSell)}
+                purchasesLeft={currentItem.purchasesLeft.toString()}
+                onBackClick={() => setShowHistory(false)}
+                nextRunTime={formatTimestamp(Number(currentItem.nextRunTime))}
+            />
+        );
+    }
 
     return (
         <ul className={`portfolio ${!isConnected ? "portfolio_is-not-connected" : ""}`}>
@@ -129,13 +151,6 @@ const Portfolio: React.FC<PortfolioProps> = ({ onDetailsClick }) => {
                                     <img className="portfolio-item__image" src={icpIcon} alt="Internet Identity" />
                                 </div>
                             </div>
-                            {/* <div className="portfolio-item__sub-container">
-                                <span className="portfolio-item__key">Total tokens bought:</span>
-                                <div className="portfolio-item__details-container">
-                                    <span className="portfolio-item__value">1000 BTC</span>
-                                    <img className="portfolio-item__image" src={ckBTCIcon} alt="Internet Identity" />
-                                </div>
-                            </div> */}
                             <div className="portfolio-item__sub-container">
                                 <span className="portfolio-item__key">Purchases left:</span>
                                 <div className="portfolio-item__details-container">
@@ -155,7 +170,8 @@ const Portfolio: React.FC<PortfolioProps> = ({ onDetailsClick }) => {
                             ⋮
                             {showPopup && selectedItem === index && (
                                 <div className="portfolio-item__popup">
-                                    <div onClick={handleClosePosition}>Close position</div>
+                                    <span onClick={handleClosePosition}>Close position</span>
+                                    <span onClick={handleCheckHistory}>Check history</span>
                                 </div>
                             )}
                         </button>
@@ -165,7 +181,5 @@ const Portfolio: React.FC<PortfolioProps> = ({ onDetailsClick }) => {
         </ul>
     );
 };
-
-// item.amountToSell.toString()
 
 export default Portfolio;
