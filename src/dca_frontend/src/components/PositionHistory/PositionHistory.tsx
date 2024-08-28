@@ -32,14 +32,9 @@ const PositionHistory: React.FC<PositionHistoryProps> = ({
                 );
             } else if ("err" in entry) {
                 return (
-                    <>
-                        <li key={index} className="position-history__item">
-                            <span className="position-history__item_error">Error: {entry.err}</span>
-                        </li>
-                        <li key={index} className="position-history__item">
-                            <span className="position-history__item_ok">Error: {entry.err}</span>
-                        </li>
-                    </>
+                    <li key={index} className="position-history__item">
+                        <span className="position-history__item_error">Error: {entry.err}</span>
+                    </li>
                 );
             } else {
                 return (

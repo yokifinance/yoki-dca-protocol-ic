@@ -64,3 +64,14 @@
     transform: translateX(-2px);
     background-color: rgba(185, 185, 185, 0.367);
 }
+
+.open-position__button_approve.error {
+    background-color: red; /* Измените цвет кнопки при ошибке */
+    color: white;
+}
+
+.open-position__error-message {
+    color: red; /* Цвет текста для сообщения об ошибке */
+    font-size: 14px; /* Размер шрифта для сообщения об ошибке */
+    margin-top: 10px;
+}
