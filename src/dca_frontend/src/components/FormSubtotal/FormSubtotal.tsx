@@ -81,7 +81,7 @@ const FormSubtotal: React.FC<FormSubtotalProps> = ({
                 <li className="form-subtotal__element">
                     <div className="form-subtotal__element-description-container">
                         <span className="form-subtotal__element-description">With every sale you buy:</span>
-                        <span className="form-subtotal__element-warning">According to {formattedTodayDate}</span>
+                        <span className="form-subtotal__element-warning">According to {formattedTodayDate} rate</span>
                     </div>
                     <div className="form-subtotal__element-sub-container">
                         <span className="form-suntotal__element-value">
@@ -100,7 +100,6 @@ const FormSubtotal: React.FC<FormSubtotalProps> = ({
                 </li>
             </ul>
 
-            {/* <li className="form-subtotal__element form-subtotal__element_total"> */}
             <div className="form-subtotal__result">
                 <div className="form-subtotal__element-sub-container form-subtotal__element-sub-container_total-purchases">
                     <span className="form-subtotal__element-description">Number of purchases:</span>
@@ -123,10 +122,9 @@ const FormSubtotal: React.FC<FormSubtotalProps> = ({
                         </span>
                         <img className="auth-modal-button__image" src={ckBTCIcon} alt="Internet Identity" />
                     </div>
-                    <span className="form-subtotal__element-warning">According to {formattedTodayDate}</span>
+                    <span className="form-subtotal__element-warning">According to {formattedTodayDate} rate</span>
                 </div>
             </div>
-            {/* </li> */}
         </div>
     );
 };

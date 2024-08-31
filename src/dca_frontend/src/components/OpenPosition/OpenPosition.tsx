@@ -33,6 +33,17 @@ const OpenPosition: React.FC<OpenPositionProps> = ({
     const [isPositionCreated, setIsPositionCreated] = useState<boolean>(false);
     const [isApproveError, setIsApproveError] = useState<boolean>(false);
 
+    const getAllPosition = async () => {
+        try {
+            const pos = await actorBackend.getAllPositions();
+            if (pos.ok) {
+                return pos.ok;
+            }
+        } catch (error) {
+            console.warn("Error fetching positions:", error);
+        }
+    };
+
     const mapToFrequency = (frequency: string): Frequency => {
         switch (frequency) {
             case "Weekly":
@@ -46,6 +57,17 @@ const OpenPosition: React.FC<OpenPositionProps> = ({
         }
     };
 
+    const calculateFullAllowance = async (oppenedPositions: Position[], currentAmount: number) => {
+        if (oppenedPositions.length > 0) {
+            const totalAmount = oppenedPositions.reduce((total, position) => total + position.amountToSell, BigInt(0));
+            const totalAllowance = Number(totalAmount) + currentAmount; // Преобразуем BigInt в number для расчета
+
+            return totalAllowance;
+        }
+
+        return currentAmount; // Если нет открытых позиций, возвращаем текущее значение
+    };
+
     useEffect(() => {
         setIsApproveError(false);
     }, [isPopupOpen]);
@@ -54,6 +76,7 @@ const OpenPosition: React.FC<OpenPositionProps> = ({
         setIsSubmitting(true);
 
         try {
+            console.log(getAllPosition());
             const totalPurchasesAmmount = (amount * 100000000 + 10_000) * numberOfPayments;
 
             const approveArgs = {
