@@ -95,8 +95,6 @@ const OpenPosition: React.FC<OpenPositionProps> = ({
                 (BigInt(amount) * BigInt(100000000) + BigInt(10_000)) * BigInt(numberOfPayments) +
                 BigInt(allowanceInNumber);
 
-            console.log(totalPurchasesAmmount);
-
             const approveArgs = {
                 amount: totalPurchasesAmmount,
                 spender: {
