@@ -76,8 +76,26 @@ const OpenPosition: React.FC<OpenPositionProps> = ({
         setIsSubmitting(true);
 
         try {
-            console.log(getAllPosition());
-            const totalPurchasesAmmount = (amount * 100000000 + 10_000) * numberOfPayments;
+            const allowanceArgs = {
+                account: {
+                    owner: principal,
+                    subaccount: [],
+                },
+                spender: {
+                    owner: Principal.fromText(whitelist[1]),
+                    subaccount: [],
+                },
+            };
+
+            const allowanceResult = await actorLedger.icrc2_allowance(allowanceArgs);
+
+            const allowanceInNumber = Number(allowanceResult.allowance);
+
+            const totalPurchasesAmmount =
+                (BigInt(amount) * BigInt(100000000) + BigInt(10_000)) * BigInt(numberOfPayments) +
+                BigInt(allowanceInNumber);
+
+            console.log(totalPurchasesAmmount);
 
             const approveArgs = {
                 amount: totalPurchasesAmmount,
